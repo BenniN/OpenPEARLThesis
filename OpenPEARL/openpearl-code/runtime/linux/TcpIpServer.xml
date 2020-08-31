@@ -1,0 +1,10 @@
+   <dation name="TcpIpServer">
+      <parameters>
+        <FIXED length="31" name="port"> <FIXEDRANGE>1,65535</FIXEDRANGE> </FIXED>
+      </parameters>
+      <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+      <checks>
+          <check instances="oncePerSet" set="TcpIpServer($port)" />
+      </checks>
+   </dation>

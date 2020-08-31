@@ -1,0 +1,56 @@
+/* Berechnung des groessten gemeinsamen Teilers
+   nach dem Algorithmus von Euklid; z.B. beschrieben in
+   https://de.wikipedia.org/wiki/Euklidischer_Algorithmus/
+*/
+MODULE(m_euklid);
+
+SYSTEM;
+   stdout: StdOut;
+   stdin:  StdIn;
+
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL so DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    SPC stdin  DATION IN  SYSTEM ALPHIC GLOBAL;
+    DCL si DATION IN  ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdin);
+
+
+! the task hello is started automatically due to the attribute 'MAIN'
+
+euklid: TASK MAIN;
+   DCL (a,b,r) FIXED INIT(-1,-1,0);
+
+   OPEN so;
+   OPEN si;
+   PUT 'Berechnung des ggT nach Euklid' TO so BY A, SKIP;
+   WHILE a LE 0 REPEAT 
+      PUT 'Gib Zahl 1 (>0)' TO so BY A, SKIP;
+      GET a FROM si BY F(6), SKIP;
+      IF a LE 0 THEN
+         PUT 'Fehleingabe!' TO so BY A, SKIP;
+      FIN;
+   END;
+ 
+   WHILE b LE 0 REPEAT 
+      PUT 'Gib Zahl 2 (>0)' TO so BY A, SKIP;
+      GET b FROM si BY F(6), SKIP;
+      IF b LE 0 THEN
+         PUT 'Fehleingabe!' TO so BY A, SKIP;
+      FIN;
+   END;
+
+   PUT 'ggT(',a,',',b,') ist:' TO so BY A,F(6),A,F(6),A;
+ 
+   WHILE b NE 0 REPEAT
+     r := a REM b;
+     a := b;
+     b := r; 
+   END;
+   PUT a TO so BY F(6), SKIP;
+
+   CLOSE so;
+   CLOSE si;
+END;
+
+MODEND;
+

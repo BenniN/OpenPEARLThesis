@@ -1,0 +1,281 @@
+/*
+ [A "BSD license"]
+ Copyright (c) 2018 Rainer Mueller
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+MODULE(IoWaitQueueTest);
+SYSTEM;
+   stdout: StdOut;
+   stdin: StdIn;
+PROBLEM;
+
+   SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+   SPC stdin DATION IN SYSTEM ALPHIC GLOBAL;
+   DCL si DATION IN ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdin);
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+   DCL done SEMA PRESET(0);
+
+START: TASK PRIO 10 MAIN;
+    OPEN so;
+    OPEN si;
+
+    CALL ioQueuePrioTest;
+    CALL ioQueueTerminateTest;
+    CALL ioQueueSuspendTest1;
+    CALL ioQueueSuspendTest2;
+    CALL ioQueueSuspendTest3;
+
+    CLOSE so;
+    CLOSE si;
+END;
+
+ioQueuePrioTest: PROC;
+   PUT 'ioQueuePrioTest' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueuePrioTest1 \");");
+   ACTIVATE ioTask1;
+   ACTIVATE ioTask2;
+   ACTIVATE ioTask3;
+   PUT 'please enter 1 2 3 with a CR after each number' TO so BY A, SKIP;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   ! with priority scheduling: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask3, ioTask2
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! with normal linux scheduling undefined - propably: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask2, ioTask3
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! expected output: 
+   !  ioTask1: got ...
+   !  ioTask2: got ...
+   !  ioTask3: got ...
+   CONTINUE ioTask2 PRIO 10;
+   REQUEST done;
+   REQUEST done;
+   REQUEST done;
+   AFTER 0.2 SEC RESUME;  ! wait for other tasks to terminate
+   PUT 'ioQueuePrioTest done' TO so BY A, SKIP;
+END;
+
+ioQueueSuspendTest1: PROC;
+   PUT 'ioQueueSuspendTest1' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest1 \");");
+   ACTIVATE ioTask1;
+   ACTIVATE ioTask2;
+   ACTIVATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   ! with priority scheduling: 
+   !    ioTask3 blocked on input from si
+   !    waitqueue: ioTask1, ioTask2
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask1
+   ! with normal linux scheduling undefined - propably: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask2, ioTask3
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   CONTINUE ioTask2 PRIO 10;
+   SUSPEND ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   CONTINUE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask1;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   PUT 'expected output: task3: 1; task2: 2; task1:3' TO so BY A, SKIP;
+   PUT 'ioQueueSuspendTest1 done' TO so BY A, SKIP;
+
+END;
+
+
+ioQueueSuspendTest2: PROC;
+   PUT 'ioQueueSuspendTest2' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
+   ACTIVATE ioTask1;
+   ACTIVATE ioTask2;
+   ACTIVATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   ! with priority scheduling: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask3, ioTask2
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! with normal linux scheduling undefined - propably: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask2, ioTask3
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! expected output: 
+   !  nothing
+   CONTINUE ioTask2 PRIO 10;
+   SUSPEND ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask1;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   CONTINUE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   PUT 'ioQueueSuspendTest2 done' TO so BY A, SKIP;
+END;
+
+ioQueueSuspendTest3: PROC;
+   PUT 'ioQueueSuspendTest3' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
+   ACTIVATE ioTask1;
+   ACTIVATE ioTask2;
+   ACTIVATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   ! with priority scheduling: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask3, ioTask2
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! with normal linux scheduling undefined - propably: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask2, ioTask3
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! expected output: 
+   !  nothing
+   CONTINUE ioTask2 PRIO 10;
+   SUSPEND ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   CONTINUE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask2;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   TERMINATE ioTask1;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   PUT 'ioQueueSuspendTest3 done' TO so BY A, SKIP;
+END;
+
+ioQueueTerminateTest: PROC;
+   PUT 'ioQueueTerminateTest' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueueTerminateTest \");");
+   ACTIVATE ioTask1;
+   ACTIVATE ioTask2;
+   ACTIVATE ioTask3;
+   AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
+   ! with priority scheduling: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask3, ioTask2
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! with normal linux scheduling undefined - propably: 
+   !    ioTask1 blocked on input from si
+   !    waitqueue: ioTask2, ioTask3
+   !    after CONTINUE
+   !    waitqueue: ioTask2, ioTask3
+   ! expected output: 
+   !  nothing
+   CONTINUE ioTask2 PRIO 10;
+   TERMINATE ioTask2;
+   TERMINATE ioTask3;
+   TERMINATE ioTask1;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   IF TRY done THEN
+      PUT 'failed - at least one task terminated' TO so BY A, SKIP;
+   FIN;
+   PUT 'ioQueueTerminateTest done' TO so BY A, SKIP;
+
+END;
+
+ioTask1: TASK PRIO 50;
+   DCL x CHAR;
+   x := doInput(x);
+   PUT 'ioTask1: got: ',x TO so BY A,A,SKIP;
+   RELEASE done;
+END;
+
+ioTask2: TASK PRIO 45;
+   DCL x CHAR;
+   x := doInput(x);
+   PUT 'ioTask2: got: ',x TO so BY A,A,SKIP;
+   RELEASE done;
+END;
+
+ioTask3: TASK PRIO 40;
+   DCL x CHAR;
+   x := doInput(x);
+   PUT 'ioTask3: got: ',x TO so BY A,A,SKIP;
+   RELEASE done;
+END;
+
+doInput: PROC ( a CHAR) RETURNS(CHAR);
+   DCL x CHAR;
+      GET  x FROM si BY A, SKIP;
+      PUT 'got ',x TO so BY A,A,SKIP;
+   RETURN (x);
+END;
+
+/**
+\endcond
+*/
+MODEND;

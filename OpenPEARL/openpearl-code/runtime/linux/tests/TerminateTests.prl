@@ -1,0 +1,649 @@
+/*
+ [A "BSD license"]
+ Copyright (c) 2012-2018 Rainer Mueller
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/**
+\file
+
+\brief test program for terminate while ether running, suspended or
+   blocked on semaphore operations
+
+\page Testprograms
+
+\section TreminatTests
+This module tests whether tasks can be terminated while
+running, suspended or waiting for a semaphore
+or waiting on I/o
+
+\cond TREAT_EXAMPLES
+*/
+
+MODULE(TerminateTests);
+SYSTEM;
+   stdout: StdOut;
+   stdin: StdIn;
+PROBLEM;
+
+   SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+   SPC stdin DATION IN SYSTEM ALPHIC GLOBAL;
+   DCL si DATION IN ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdin);
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+   DCL (s1,s2) SEMA PRESET(0,10);
+   DCL boltBlockerGoon SEMA PRESET(0);
+   DCL bolt BOLT;
+
+   DCL startTime CLOCK;
+   DCL d         DURATION; 
+
+START: TASK PRIO 10 MAIN;
+    OPEN so;
+    OPEN si;
+
+! missing:
+! io wait queue not tested yet with suspend,continue,terminate
+
+    CALL activateRunning;
+    CALL activateSuspended; 
+    CALL terminateTerminated;
+
+    CALL terminateRunning;
+    CALL terminateSuspended;
+    CALL terminateSemaBlocked;
+    CALL terminateBoltBlocked;
+    CALL terminateIoBlocked;
+
+    CALL suspendRunning;
+    CALL suspendSuspended;
+    CALL suspendTerminated;
+    CALL suspendSelfContinue;
+    CALL semaBlockedSuspendContinue;
+    CALL boltBlockedSuspendContinue;
+
+    CALL suspendIoBlocked;
+
+    CLOSE so;
+    CLOSE si;
+END;
+
+DCL goon BIT(1);
+activateRunning: PROC;
+   DCL ok BIT(1) INIT('0'B1);
+   PUT 'activateRunning' TO so BY A, SKIP;
+   goon = '1'B1;
+   ACTIVATE T2activateRunning;
+   __cpp__(
+   " try { "
+   "_T2activateRunning.activate(me);"
+   "} catch (pearlrt::TaskRunningSignal s) { _ok.x = 0x80;}"
+   );
+   IF ok THEN
+      PUT 'ok - got signal while activate a running task' TO so BY A, SKIP;
+   ELSE
+      PUT 'fail - got no signal while activate a running task' TO so BY A, SKIP;
+   FIN;
+   goon = '0'B1;
+   AFTER 0.1 SEC RESUME;  ! wait for other task to terminate
+END;
+
+T2activateRunning: TASK;
+   WHILE goon REPEAT
+   END;
+END;
+
+activateSuspended: PROC;
+   DCL ok BIT(1) INIT('0'B1);
+   PUT 'activateSuspended' TO so BY A, SKIP;
+   ACTIVATE T2suspended;
+   AFTER 0.1 SEC RESUME;   ! let T2suspend reach the SUSPEND statement;
+   __cpp__(
+   " try { "
+   "_T2suspended.activate(me);"
+   "} catch (pearlrt::TaskRunningSignal s) { _ok.x = 0x80;}"
+   );
+   IF ok THEN
+      PUT 'ok - got signal while activate a suspended task' TO so BY A, SKIP;
+   ELSE
+      PUT 'fail - got no signal while activate a suspended task' TO so BY A, SKIP;
+   FIN;
+   CONTINUE T2suspended;
+   AFTER 0.1 SEC RESUME;  ! wait for other task to terminate
+END;
+
+DCL counter1 FIXED;
+
+suspendRunning: PROC;
+   DCL counts FIXED;
+   PUT 'suspendRunning started' TO so BY A, SKIP;
+   counter1 := 0;
+   ACTIVATE T2suspendRunning;
+   AFTER 0.5 SEC RESUME;
+   SUSPEND T2suspendRunning;
+   counts := counter1;
+   AFTER 0.5 SEC RESUME;
+   IF counts EQ 0 THEN
+      PUT 'fail: T2suspendRunning did not start' TO so BY A, SKIP;
+   ELSE
+      IF counts NE counter1 THEN
+         PUT 'fail: T2suspendRunning did not suspend' TO so BY A, SKIP;
+      ELSE
+         PUT 'ok: suspend of running task' TO so BY A, SKIP;
+      FIN;
+   FIN;
+   CONTINUE T2suspendRunning;
+   AFTER 2 SEC RESUME;  ! wait to finish T2suspendRunning
+END;
+
+T2suspendRunning: TASK PRIO 30; ! prio must be worse than the prio of START
+   DCL end CLOCK;
+   end := NOW + 2 SEC;
+
+   WHILE NOW < end REPEAT
+      counter1 := counter1 + 1;
+   END;
+END;
+
+suspendSuspended: PROC;
+   __cpp__("int ts;");
+   DCL ok BIT(1) INIT ('0'B1);
+   PUT 'suspendSuspended' TO so BY A, SKIP;
+
+      ACTIVATE T2suspended;
+      AFTER 0.1 SEC RESUME;
+
+   PUT 'suspendSuspended' TO so BY A, SKIP; 
+      __cpp__("ts = _T2suspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::SUSPENDED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (SUSPENDED expected)\\n\", ts);"
+      "}"
+      );
+   __cpp__(
+   "try {"
+   "   _T2suspended.suspend(me);"
+   "} catch (pearlrt::TaskSuspendedSignal s) {"
+   "   printf(\"ok - got SuspendedSignal\\n\");"
+   "   _ok.x = 0x80;"
+   "}"
+   );
+   CONTINUE T2suspended;
+   IF NOT ok THEN
+      PUT 'failed - did not get SuspendedSignal' TO so BY A, SKIP;
+  FIN; 
+  AFTER 0.1 SEC RESUME; ! wait for T2suspended to terminate
+END;
+
+suspendTerminated: PROC;
+   DCL ok BIT(1) INIT ('0'B1);
+
+   PUT 'suspendTerminated' TO so BY A, SKIP; 
+   __cpp__(
+   "try {"
+   "   _T2running.suspend(me);"
+   "} catch (pearlrt::TaskTerminatedSignal s) {"
+   "   printf(\"ok - got TerminatedSignal\\n\");"
+   "   _ok.x = 0x80;"
+   "}"
+   );
+   IF NOT ok THEN
+      PUT 'failed - did not get TerminatedSignal' TO so BY A, SKIP;
+  FIN; 
+END;
+
+
+suspendSelfContinue: PROC;
+   PUT 'suspendSelfContinue' TO so BY A, SKIP;
+   d := 59 SEC;
+   ACTIVATE suspendSelfTask PRIO 3;
+   AFTER 0.5 SEC RESUME;
+   startTime := NOW;
+   CONTINUE suspendSelfTask;
+   AFTER 0.5 SEC RESUME;  ! wait for task to continue
+   IF d < 0.01 SEC THEN
+      PUT 'suspend self and continue ok (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   ELSE
+      PUT 'suspend self and continue failed (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   FIN;
+END;
+
+suspendSelfTask: TASK;
+   SUSPEND;
+   d := NOW - startTime;
+END;
+
+semaBlockedSuspendContinue: PROC;
+   ! version 1 ; do RELEASE before CONTINUE
+   PUT 'semaBlockedSuspendedContinue' TO so BY A, SKIP;
+   ACTIVATE semaBlockedSuspended PRIO 3;
+   AFTER 0.1 SEC RESUME;   ! wait for task to reach REQUEST
+   SUSPEND semaBlockedSuspended;
+   d := 59 SEC;
+   startTime = NOW;
+   RELEASE s1;
+   CONTINUE semaBlockedSuspended;
+   AFTER 0.5 SEC RESUME;  ! wait for task to continue
+   IF d < 0.01 SEC THEN
+      PUT 'V1: semaBlockedSuspendedContinue ok (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   ELSE
+      PUT 'V1 semaBlockedSuspendedContinue failed (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   FIN;
+
+   ! version 2 ; do RELEASE after CONTINUE
+   ACTIVATE semaBlockedSuspended PRIO 3;
+   AFTER 0.1 SEC RESUME;   ! wait for task to reach REQUEST
+   SUSPEND semaBlockedSuspended;
+   d := 59 SEC;
+   startTime = NOW;
+   CONTINUE semaBlockedSuspended;
+   RELEASE s1;
+   AFTER 0.5 SEC RESUME;  ! wait for task to continue
+   IF d < 0.01 SEC THEN
+      PUT 'V2: semaBlockedSuspendedContinue ok (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   ELSE
+      PUT 'V2 semaBlockedSuspendedContinue failed (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   FIN;
+END;
+
+semaBlockedSuspended: TASK;
+   REQUEST s1;
+   d := NOW - startTime;
+END;
+
+boltBlockedSuspendContinue: PROC;
+   PUT 'boltBlockedSuspendedContinue' TO so BY A, SKIP;
+   ! version 1 ; do RESERVE before CONTINUE
+   RESERVE bolt;   ! the the BOLT to locked
+   ACTIVATE boltBlockedSuspended PRIO 3;
+   AFTER 0.1 SEC RESUME;   ! wait for task to reach RESERVE
+   SUSPEND boltBlockedSuspended;
+   d := 59 SEC;
+   startTime = NOW;
+   FREE bolt;
+   CONTINUE boltBlockedSuspended;
+   AFTER 0.5 SEC RESUME;  ! wait for task to continue
+   IF d < 0.01 SEC THEN
+      PUT 'V1: boltBlockedSuspendedContinue ok (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   ELSE
+      PUT 'V1 boltBlockedSuspendedContinue failed (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   FIN;
+
+   ! version 2 ; do RELEASE after CONTINUE
+   RESERVE bolt;   ! the the BOLT to locked
+   ACTIVATE boltBlockedSuspended PRIO 3;
+   AFTER 0.1 SEC RESUME;   ! wait for task to reach RESERVE
+   SUSPEND boltBlockedSuspended;
+   d := 59 SEC;
+   startTime = NOW;
+   CONTINUE boltBlockedSuspended;
+   FREE bolt;
+   AFTER 0.5 SEC RESUME;  ! wait for task to continue
+   IF d < 0.01 SEC THEN
+      PUT 'V2: boltBlockedSuspendedContinue ok (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   ELSE
+      PUT 'V2 boltBlockedSuspendedContinue failed (d=', d,')' TO so 
+       BY A, D(14,6), A, SKIP;
+   FIN;
+END;
+
+boltBlockedSuspended: TASK;
+   RESERVE bolt;
+   d := NOW - startTime;
+   FREE bolt;
+END;
+
+terminateSemaBlocked: PROC ;
+   __cpp__("int ts;");
+
+   PUT 'terminateSemaBlocked started -- do 10 slow (100ms) terminates (100ms)' TO so BY A, SKIP;
+
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      ACTIVATE T2SemaBlocked;
+      AFTER 0.1 SEC RESUME;
+      __cpp__("ts = _T2SemaBlocked.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+      TERMINATE T2SemaBlocked;
+      AFTER 0.1 SEC RESUME;
+      __cpp__(
+      "ts = _T2SemaBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+     );
+   END;
+
+   PUT 'terminateSemaBlocked started -- do 10 fast terminates' TO so BY A, SKIP;
+
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+      ACTIVATE T2SemaBlocked;
+      __cpp__(
+      "ts = _T2SemaBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2SemaBlocked;
+      __cpp__(
+      "ts = _T2SemaBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+
+   PUT 'Task T1 finished' TO so BY A, SKIP;
+
+END;
+
+
+T2SemaBlocked: TASK PRIO 2;
+   REQUEST s1, s2;
+END;
+
+terminateBoltBlocked :PROC;
+   __cpp__("int ts;");
+   PUT 'terminateBoltBlocked started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
+   ACTIVATE T2BoltBlocker;
+   AFTER 0.2 SEC RESUME;
+
+   FOR i TO 10 REPEAT
+      PUT 'test #',i TO so BY A, F(3), SKIP;
+      ACTIVATE T2BoltBlocked;
+      AFTER 0.1 SEC RESUME;
+      __cpp__(
+      "ts = _T2BoltBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2BoltBlocked;
+      __cpp__(
+      "ts = _T2BoltBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+
+   PUT 'terminateBoltBlocked started -- do 10 fast terminates' TO so BY A, SKIP;
+
+   FOR i TO 10 REPEAT
+      PUT 'test #',i TO so BY A, F(3), SKIP;
+      ACTIVATE T2BoltBlocked;
+      __cpp__(
+      "ts = _T2BoltBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2BoltBlocked;
+      __cpp__(
+      "ts = _T2BoltBlocked.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+   LEAVE bolt;
+   PUT 'T1BoltBlocked finished' TO so BY A, SKIP;
+END;
+
+T2BoltBlocker: TASK PRIO 2;
+   ENTER bolt;
+END;
+
+T2BoltBlocked: TASK PRIO 2;
+   RESERVE bolt;
+END;
+
+
+terminateTerminated: PROC;
+   DCL ok BIT(1) INIT ('0'B1);
+   goon = '1'B1;
+   PUT 'terminateTerminatedd started' TO so BY A, SKIP; 
+   __cpp__(
+   "try {"
+   "   _T2running.terminate(me);"
+   "} catch (pearlrt::TaskTerminatedSignal s) {"
+   "   printf(\"ok - got TerminatedSignal\\n\");"
+   "   _ok.x = 0x80;"
+   "}"
+   );
+   IF NOT ok THEN
+      PUT 'failed- did not get TerminatedSignal' TO so BY A, SKIP;
+  FIN; 
+END;
+
+
+terminateRunning: PROC;
+   __cpp__("int ts;");
+   goon = '1'B1;
+   PUT 'terminateRunning started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
+  
+   FOR i TO 10 REPEAT 
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      ACTIVATE T2running;
+      AFTER 0.1 SEC RESUME;
+      __cpp__("ts = _T2running.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::RUNNING) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (RUNNING expected)\\n\", ts);"
+      "}"
+      );
+      TERMINATE T2running;
+      AFTER 0.1 SEC RESUME;
+      __cpp__(
+      "ts = _T2running.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+     );
+   END;
+
+   PUT 'terminateRunning started  -- do 10 fast terminates' TO so BY A, SKIP;
+
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+      ACTIVATE T2running;
+      __cpp__(
+      "ts = _T2running.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::RUNNING) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (RUNNING expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2running;
+      __cpp__(
+      "ts = _T2running.getTaskState();"
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root?\\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+
+   PUT 'Task T1 finished' TO so BY A, SKIP;
+   goon = '0'B1;  ! enshure that task T2Running terminates
+END;
+
+T2running: TASK PRIO 20;
+   DCL x FIXED INIT(1);
+   WHILE goon REPEAT
+       x := 1;
+   END;
+END;
+
+
+terminateSuspended: PROC;
+  __cpp__("int ts;");
+
+   PUT 'terminateSuspended started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      ACTIVATE T2suspended;
+      AFTER 0.1 SEC RESUME;
+      __cpp__("ts = _T2suspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::SUSPENDED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (SUSPENDED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2suspended;
+      __cpp__("ts = _T2suspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+
+   PUT 'suspended started -- do 10 fast terminates' TO so BY A, SKIP;
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      ACTIVATE T2suspended;
+      __cpp__("ts = _T2suspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::SUSPENDED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (SUSPENDED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2suspended;
+      __cpp__("ts = _T2suspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "}"
+      );
+   END;
+END;
+
+T2suspended: TASK PRIO 2;
+   SUSPEND;
+END;
+
+
+terminateIoBlocked: PROC;
+  __cpp__("int ts;");
+
+   PUT 'terminateIoBlocked started -- do 10 slow (3.3s) terminates' TO so BY A, SKIP;
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      ACTIVATE T2IoBlocked;
+      AFTER 3.3 SEC RESUME;
+      __cpp__("ts = _T2IoBlocked.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+
+      TERMINATE T2IoBlocked;
+      __cpp__("ts = _T2IoBlocked.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::TERMINATED) {"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\\n\", ts);"
+      "   pearlrt::Log::info(\"run as root? \\n*** wrong task state (%d) (TERMINATED expected)\", ts);"
+     "}"
+     );
+   END;
+END;
+
+T2IoBlocked: TASK PRIO 2;
+   DCL x CHAR;
+   GET  x FROM si BY A, SKIP;
+   PUT 'T2IoBlocked got ',x TO so BY A,A,SKIP;
+END;
+
+suspendIoBlocked: PROC;
+  __cpp__("int ts;");
+
+   PUT 'suspendIoBlocked started -- do 10 suspend continue (1s)' TO so BY A, SKIP;
+   ACTIVATE T2IoSuspended;
+   FOR i TO 10 REPEAT
+      PUT 'Test #',i TO so BY A, F(3), SKIP;
+
+      AFTER 1 SEC RESUME;
+      __cpp__("ts = _T2IoSuspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::BLOCKED) {"
+      "   pearlrt::Log::info(\"*** wrong task state (%d) (BLOCKED expected)\", ts);"
+      "   printf(\"run as root? \\n*** wrong task state (%d) (BLOCKED expected)\\n\", ts);"
+      "}"
+      );
+
+      SUSPEND T2IoSuspended;
+      __cpp__("ts = _T2IoSuspended.getTaskState();"
+
+      "if (ts != pearlrt::TaskCommon::SUSPENDED_BLOCKED) {"
+      "   printf(\"*** wrong task state (%d) (SUSPENDED_BLOCKED expected)\\n\", ts);"
+      "   pearlrt::Log::info(\"*** wrong task state (%d) (SUSPENDED_BLOCKED expected)\", ts);"
+     "}"
+     );
+      PUT 'suspended' TO so BY A, SKIP;
+      AFTER 1 SEC RESUME;
+      CONTINUE T2IoSuspended;
+      PUT 'continued' TO so BY A, SKIP;
+   END;
+   TERMINATE T2IoSuspended;
+END;
+
+T2IoSuspended: TASK PRIO 2;
+   DCL x CHAR;
+   REPEAT
+      GET  x FROM si BY A, SKIP;
+      PUT 'got ',x TO so BY A,A,SKIP;
+   END;
+END;
+
+/**
+\endcond
+*/
+MODEND;

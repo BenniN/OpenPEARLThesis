@@ -1,0 +1,159 @@
+MODULE(CharTests);
+
+SYSTEM;
+
+ stdout: StdOut;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+charTests: TASK MAIN;
+   OPEN so;
+   CALL rhsSlice;
+   CALL lhsSlice;
+   CALL cat;
+   CLOSE so;
+END;
+
+rhsSlice: PROC;
+   DCL chars CHAR(32);
+   DCL char1 CHAR(1);
+   DCL char5 CHAR(5);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       char1 := chars.CHAR(6);
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+ 
+   PUT '.CHAR(6): CHAR select ', executionTime,
+       ' --> per 1000 operations ', perOperation TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       char5 := chars.CHAR(6:10);
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+   
+   PUT '.CHAR(6:10): CHAR select ', executionTime, 
+       ' --> per 1000 operations ', perOperation TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+END;
+
+lhsSlice: PROC;
+   DCL chars CHAR(32);
+   DCL char1 CHAR(1);
+   DCL char5 CHAR(5);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       chars.CHAR(6) := char1;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+ 
+   PUT '.CHAR(6): CHAR set ', executionTime,
+       ' --> per 1000 operations ', perOperation TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       chars.CHAR(6:10) := char5;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+   
+   PUT '.CHAR(6:10): CHAR set ', executionTime, 
+       ' --> per 1000 operations ', perOperation TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+END;
+
+cat: PROC;
+   DCL char1 CHAR(100);
+   DCL char2 CHAR(100);
+   DCL char3 CHAR(200);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       char3 := char1 CAT char2;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+ 
+   PUT 'CHAR(100) + CHAR(100) ', executionTime,
+       ' --> per 1000 operations ', perOperation TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+
+END;
+MODEND;
+

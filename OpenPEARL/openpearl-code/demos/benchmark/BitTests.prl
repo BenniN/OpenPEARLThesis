@@ -1,0 +1,158 @@
+MODULE(BitTests);
+
+SYSTEM;
+
+ stdout: StdOut;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+bitTests: TASK MAIN;
+   OPEN so;
+   CALL rhsSlice;
+   CALL lhsSlice;
+   CALL cat;
+   CLOSE so;
+END;
+
+rhsSlice: PROC;
+   DCL bits BIT(32);
+   DCL bit1 BIT(1);
+   DCL bit5 BIT(5);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       bit1 := bits.BIT(6);
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+ 
+   PUT '.BIT(6)  Bit select ', executionTime,
+        ' --> per 1000 operations ', perOperation  TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       bit5 := bits.BIT(6:10);
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+
+   PUT '.BIT(6:10) Bit select ', executionTime, 
+        ' --> per 1000 operations ', perOperation  TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+END;
+
+lhsSlice: PROC;
+   DCL bits BIT(32);
+   DCL bit1 BIT(1);
+   DCL bit5 BIT(5);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       bits.BIT(6) := bit1;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+
+   PUT '.BIT(6)  Bit set ', executionTime,
+        ' --> per 1000 operations ', perOperation  TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       bits.BIT(6:10) := bit5;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+   
+   PUT '.BIT(6:10) Bit set ', executionTime, 
+        ' --> per 1000 operations ', perOperation  TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+END;
+
+cat: PROC;
+
+   DCL bits BIT(32);
+   DCL bit1 BIT(11);
+   DCL bit2 BIT(21);
+
+   DCL nbrOfRepetitions FIXED(31) INIT(30000);
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+
+   PUT nbrOfRepetitions, '*1000 repetitions' TO so BY F(8),A,SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+   END;
+   END;
+   end := NOW;
+   loopExecution := end - start;
+
+   PUT 'loop offset', loopExecution TO so BY A,X,D(13,6), SKIP;
+
+   start := NOW;
+   TO 1000 REPEAT
+   TO nbrOfRepetitions REPEAT
+       bits := bit1 CAT bit2;
+   END;
+   END;
+   end := NOW;
+   executionTime := end - start - loopExecution;
+   perOperation = executionTime / nbrOfRepetitions;
+
+   PUT 'BIT(11) CAT BIT(21) ', executionTime,
+        ' --> per 1000 operations ', perOperation  TO so
+   BY A(25),D(13,6),A,D(13,6), SKIP;
+END;
+
+MODEND;
+

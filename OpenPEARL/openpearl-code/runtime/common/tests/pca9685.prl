@@ -1,0 +1,125 @@
+MODULE(pca9685);
+SYSTEM;
+  i2cbus : I2CBus('/dev/i2c-0');
+  pcaProvider:     PCA9685('40'B4,30) --- i2cbus;
+! next two lines are not accepted by the compiler
+!  pca    : PCA9685Channel(0) --- PCA9685('40'B4,30) --- I2CBus('/dev/i2c-0');
+!  pca    : PCA9685Channel(0) --- PCA9685('40'B4,30) --- i2cbus;
+  pca0    : PCA9685Channel(0) --- pcaProvider;
+  pca1    : PCA9685Channel(1) --- pcaProvider;
+  pca2    : PCA9685Channel(2) --- pcaProvider;
+  pca3    : PCA9685Channel(3) --- pcaProvider;
+  pca4    : PCA9685Channel(4) --- pcaProvider;
+  pca5    : PCA9685Channel(5) --- pcaProvider;
+  pca6    : PCA9685Channel(6) --- pcaProvider;
+  pca7    : PCA9685Channel(7) --- pcaProvider;
+  pca8    : PCA9685Channel(8) --- pcaProvider;
+  pca9    : PCA9685Channel(9) --- pcaProvider;
+  pca10   : PCA9685Channel(10) --- pcaProvider;
+  pca11   : PCA9685Channel(11) --- pcaProvider;
+  pca12   : PCA9685Channel(12) --- pcaProvider;
+  pca13   : PCA9685Channel(13) --- pcaProvider;
+  pca14   : PCA9685Channel(14) --- pcaProvider;
+  pca15   : PCA9685Channel(15) --- pcaProvider;
+  termout: StdOut;
+  termin: StdIn;
+
+PROBLEM;
+  SPC termout DATION OUT SYSTEM ALPHIC GLOBAL;
+  SPC termin  DATION IN  SYSTEM ALPHIC GLOBAL;
+  SPC pca0    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca1    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca2    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca3    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca4    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca5    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca6    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca7    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca8    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca9    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca10    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca11    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca12    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca13    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca14    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+  SPC pca15    DATION OUT  SYSTEM BASIC FIXED(15) GLOBAL;
+   
+
+DCL consol DATION OUT ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(termout);
+DCL consil  DATION IN ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(termin);
+DCL myPca0 DATION OUT BASIC FIXED(15) CREATED(pca0);
+DCL myPca1 DATION OUT BASIC FIXED(15) CREATED(pca1);
+DCL myPca2 DATION OUT BASIC FIXED(15) CREATED(pca2);
+DCL myPca3 DATION OUT BASIC FIXED(15) CREATED(pca3);
+DCL myPca4 DATION OUT BASIC FIXED(15) CREATED(pca4);
+DCL myPca5 DATION OUT BASIC FIXED(15) CREATED(pca5);
+DCL myPca6 DATION OUT BASIC FIXED(15) CREATED(pca6);
+DCL myPca7 DATION OUT BASIC FIXED(15) CREATED(pca7);
+DCL myPca8 DATION OUT BASIC FIXED(15) CREATED(pca8);
+DCL myPca9 DATION OUT BASIC FIXED(15) CREATED(pca9);
+DCL myPca10 DATION OUT BASIC FIXED(15) CREATED(pca10);
+DCL myPca11 DATION OUT BASIC FIXED(15) CREATED(pca11);
+DCL myPca12 DATION OUT BASIC FIXED(15) CREATED(pca12);
+DCL myPca13 DATION OUT BASIC FIXED(15) CREATED(pca13);
+DCL myPca14 DATION OUT BASIC FIXED(15) CREATED(pca14);
+DCL myPca15 DATION OUT BASIC FIXED(15) CREATED(pca15);
+
+setValue: TASK MAIN;
+   DCL x FIXED(15) INIT (4090);
+   DCL ch FIXED(15);
+
+   OPEN consol;
+   OPEN consil;
+   OPEN myPca0;
+   OPEN myPca1;
+   OPEN myPca2;
+   OPEN myPca3;
+   OPEN myPca4;
+   OPEN myPca5;
+   OPEN myPca6;
+   OPEN myPca7;
+   OPEN myPca8;
+   OPEN myPca9;
+   OPEN myPca10;
+   OPEN myPca11;
+   OPEN myPca12;
+   OPEN myPca13;
+   OPEN myPca14;
+   OPEN myPca15;
+
+   PUT 'PCA9685 Test started' TO consol BY A, SKIP;
+   REPEAT
+      PUT 'enter channel (0..15):' TO consol BY A;
+      GET ch FROM consil BY F(6), SKIP;
+      PUT 'enter value (Fixed(15): ' TO consol BY A, SKIP;
+      GET x FROM consil BY F(6), SKIP;
+      CALL setChannel(ch, x);
+   END;
+END; 
+
+setChannel: PROC(ch FIXED(15), x FIXED(15));
+
+   PUT 'set channel ',ch,' to value: ',x TO consol BY A,F(6),A,F(6), SKIP;
+   CASE ch+1  ! ALT are counted stating at 1
+    ALT SEND x TO myPca0;
+    ALT SEND x TO myPca1;
+    ALT SEND x TO myPca2;
+    ALT SEND x TO myPca3;
+    ALT SEND x TO myPca4;
+    ALT SEND x TO myPca5;
+    ALT SEND x TO myPca6;
+    ALT SEND x TO myPca7;
+    ALT SEND x TO myPca8;
+    ALT SEND x TO myPca9;
+    ALT SEND x TO myPca10;
+    ALT SEND x TO myPca11;
+    ALT SEND x TO myPca12;
+    ALT SEND x TO myPca13;
+    ALT SEND x TO myPca14;
+    ALT SEND x TO myPca15;
+    OUT PUT 'illegal channel (',ch,')' TO consol BY A,F(6), A, SKIP;
+   FIN;
+END;
+
+
+MODEND;

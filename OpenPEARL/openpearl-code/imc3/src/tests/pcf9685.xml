@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="pcf9685"  file="pcf9685.prl">
+<system>
+ <username name="i2cbus"  line="3">
+ <sysname name="I2CBus">
+       <parameters>
+             <CHAR>'/dev/i2c-0'</CHAR> 
+       </parameters>
+ </sysname>
+ </username>
+
+ <username name="pcfProvider"  line="4">
+ <sysname name="PCF9685Provider">
+       <parameters>
+             <BIT>'40'B4</BIT> 
+             <FIXED>30</FIXED> 
+       </parameters>
+     <association name="i2cbus">
+     </association>
+ </sysname>
+ </username>
+
+ <username name="pcf"  line="6">
+ <sysname name="PCF9685Channel">
+       <parameters>
+             <FIXED>0</FIXED> 
+       </parameters>
+     <association name="pcfProvider">
+     </association>
+ </sysname>
+ </username>
+
+ <username name="termout"  line="7">
+ <sysname name="StdOut">
+ </sysname>
+ </username>
+
+
+</system>
+<problem>
+ <spc type="dation" name="termout" line="10">
+ <attributes>SYSTEM,OUT</attributes>
+ <data>ALPHIC</data>
+ </spc>
+ <spc type="dation" name="pcf" line="11">
+ <attributes>BASIC,SYSTEM,OUT</attributes>
+ <data>ALL</data>
+ </spc>
+
+</problem>
+</module>

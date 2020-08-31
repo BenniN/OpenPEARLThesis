@@ -1,0 +1,8 @@
+   <dation name="Disc">
+      <parameters>
+        <CHAR length="32767" name="dir"> <NotEmpty/> </CHAR>
+        <FIXED length="31" name="numberOfFiles"> <FIXEDGT>0</FIXEDGT> </FIXED>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>

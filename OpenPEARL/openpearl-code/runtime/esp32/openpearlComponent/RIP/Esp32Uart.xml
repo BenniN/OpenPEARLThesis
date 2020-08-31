@@ -1,0 +1,6 @@
+<dation name="Esp32UartCommsDriver">
+   <parameters>
+   </parameters>
+   <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+   <data>ALPHIC</data>
+</dation>

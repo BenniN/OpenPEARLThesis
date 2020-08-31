@@ -1,0 +1,32 @@
+/*
+Demonstration application 'Hello World'
+*/
+
+MODULE(mhello);
+
+SYSTEM;
+   stdout: StdOut;
+
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+x: PROC;
+  DCL f FIXED(15) INIT(30000);
+   PUT 'f=',f TO termout BY A,F(6), SKIP;
+   f := f + f;
+   PUT 'f=',f TO termout BY A,F(6), SKIP;
+END;
+
+! the task hello is started automatically due to the attribute 'MAIN'
+hello: TASK MAIN;
+__cpp__("printf(\"los\\n\");");
+   OPEN termout;
+__cpp__("printf(\"open done\\n\");");
+   PUT 'Hello World from PEARL' TO termout BY A, SKIP;
+   CALL x;
+   CLOSE termout;
+END;
+
+MODEND;
+

@@ -1,0 +1,61 @@
+MODULE(arrayProcParam);
+
+SYSTEM;
+   stdout: StdOut;
+PROBLEM;
+ 
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+t1: TASK MAIN;
+   DCL data(100) FIXED;
+   DCL y FIXED;
+   FOR i TO UPB data REPEAT
+      data(i) = i;
+   END;
+
+   OPEN so;
+   PUT 'Array Proc Params test' TO so BY A, SKIP;
+   CALL testFixedIdent(data(3));
+
+   !y = sum(data);
+   !PUT 'sum of all elements: ' , y  TO so BY A, F(6), SKIP;
+   PUT 'data array is now' TO so BY A, SKIP;
+   FOR i  TO 100 REPEAT
+      PUT data(i) TO so BY F(5);
+      IF i REM 10 == 0 THEN
+         PUT TO so BY SKIP;
+      FIN;
+   END;
+ 
+   CLOSE so;
+END;
+
+add: PROC(a FIXED) RETURNS (FIXED);
+   RETURN (a+a);
+END;
+
+
+testFixedIdent: PROC (a FIXED IDENT);
+   a = 0;
+END;
+
+testInvFixedIdent: PROC (a INV FIXED IDENT);
+!   a = 0;   !<<< will be detected by the compiler
+END;
+
+
+
+sum: PROC (x() FIXED IDENT) RETURNS (FIXED);
+   DCL s FIXED INIT(0);
+
+   FOR i TO UPB x REPEAT
+       s = s + x(i);
+   END;
+
+   RETURN(s);
+END;
+
+
+MODEND;
+

@@ -1,0 +1,11 @@
+   <configuration name="Log" instances="1" >
+      <parameters>
+         <CHAR length="4" name="logLevel">
+           <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <needAssociation name="AlphicOutProvider"/>
+      <checks>
+ 	<check instances="1"/>
+      </checks>
+   </configuration>

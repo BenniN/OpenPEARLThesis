@@ -1,0 +1,105 @@
+MODULE(arrayDemo);
+
+SYSTEM;
+   stdout: StdOut;
+
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+fillMatrix: PROC(x(,) FIXED IDENT);
+    PUT '----------------' TO termout BY A, SKIP;
+    PUT '[',1 LWB x,':',1 UPB x,',' ,2 LWB x,':',2 UPB x, ']'
+    TO termout BY A, F(4),A,F(4),A,F(4),A,F(4),A,SKIP;
+
+    FOR i FROM 1 LWB x TO 1 UPB x REPEAT
+      FOR j FROM 2 LWB x TO 2 UPB x REPEAT
+        x(i,j) = 100*i+j;
+      END;
+    END;
+END;
+
+transponse: PROC(x(,) FIXED IDENT);
+    DCL help FIXED;
+    IF 1 LWB x NE 2 LWB x OR 1 UPB x NE 2 UPB x THEN
+        PUT 'martix must be symmetric' TO termout BY A, SKIP;
+        RETURN;
+    FIN;
+ 
+    FOR i FROM 1 LWB x TO 1 UPB x REPEAT
+      FOR j FROM i+1 TO 2 UPB x REPEAT
+        help = x(i,j);
+        x(i,j) = x(j,i);
+        x(j,i) = help;
+      END;
+    END;
+END;
+
+printMatrix: PROC(x(,) FIXED IDENT);
+    DCL col FIXED;
+
+    PUT '----------------' TO termout BY A, SKIP;
+    PUT '[',1 LWB x,':',1 UPB x,',' ,2 LWB x,':',2 UPB x, ']'
+    TO termout BY A, F(4),A,F(4),A,F(4),A,F(4),A,SKIP;
+
+    FOR i FROM 1 LWB x TO 1 UPB x REPEAT
+       col = 0;
+       PUT i,':' TO termout BY F(4),A;
+      FOR j FROM 2 LWB x TO 2 UPB x REPEAT
+        IF col < 10 THEN
+            PUT x(i,j) TO termout BY F(6);
+        FIN;
+        IF col EQ 10 THEN
+            PUT '...' TO termout BY A;
+        FIN;
+        col = col + 1;
+      END;
+      PUT TO termout BY SKIP;
+    END;
+END;
+
+printArray: PROC(x() FIXED IDENT);
+    DCL col FIXED INIT(1);
+    PUT '----------------' TO termout BY A, SKIP;
+    PUT 'LWB:',LWB x,'UBP:',UPB x TO termout BY A, F(4),X(2),A,F(4),SKIP;
+    FOR i FROM LWB x TO UPB x REPEAT
+       IF (col EQ 1) THEN
+           PUT i ,':' TO termout BY F(4),A;
+       FIN;
+       PUT x(i) TO termout BY F(6);
+       col := col + 1;
+       IF (col EQ 11) THEN
+          col = 1;
+          PUT TO termout BY SKIP;
+       FIN;
+    END; 
+    IF col GT 1 THEN
+       PUT TO termout BY SKIP;
+    FIN;
+
+END;
+
+hello: TASK MAIN;
+   DCL array1(2:20) FIXED INIT(1,2,3,4);
+   DCL array2(5:15) FIXED INIT(5,6,7,8);
+   DCL array3(0:3) FIXED INIT(-1,-2,-3,-4);
+   
+   DCL m1(1:5,3:9) FIXED;
+   DCL m2(1:10,1:10) FIXED;
+
+   OPEN termout;
+   CALL printArray(array1);
+   CALL printArray(array2);
+   CALL printArray(array3);
+
+   CALL fillMatrix(m1);
+   CALL fillMatrix(m2);
+   CALL printMatrix(m1);
+   CALL printMatrix(m2);
+   CALL transponse(m2);
+   CALL printMatrix(m2);
+   CLOSE termout;
+END;
+
+MODEND;
+

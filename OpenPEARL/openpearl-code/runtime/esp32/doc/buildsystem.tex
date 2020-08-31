@@ -1,0 +1,105 @@
+\section{Buildsystem}
+
+The ESP32 is provided and supported by Espressif (www.espressif.com).
+An IoT debelopment Framework (IDF) and a c/c++ buildsystem are provided. 
+
+The IDF is structured in socalled {\em components}. An IDF-Project contains
+the project specific files which are combined by the framework with the 
+framework components. The build of an ESP-IDF application is done 
+{\em out of place} --- in the build folder of the application folder.
+
+The OpenPEARL buildsystem requires the invocation of the suitable 
+g++ compiler/linker upon the c++ files, which result from the PRL to C++ 
+translation of the OpenPEARL compiler.
+For the usage of the ESP-IDF by OpenPEARL, the files of the IDF should NOT 
+become compiled for each PEARL application build.
+
+\subsection{Integration of the ESP-IDF with the OpenPEARL-Repostory}
+The ESP-IDF is extended in high rate. Thus we do not copy a specific
+version of the ESP-IDF in our repository.
+
+The OpenPEARL build system is based on \verb|make|. The build is done 
+currently {\em in place}.
+The OpenPEARL specific parts of the runtime system is added to the ESP-IDF
+by setting some links into the OpenPEARL working directory.
+E.g. \verb|/user/xxx/Openpearl/openpearl-code/runtime/esp32/openpearlspecific ~/esp/esp-idf/components/openpearl|
+After this, the ESP-IDF recognize a new component named 'openpearl' and
+ treat this like any other ESP-IDF component.
+
+To use the ESP-IDF, the steps for installation must be done as described in 
+getting started guide from Espressif.
+To check the installation an presence of all prerequisites you should build
+ one the provided examples of the ESP-IDF as described there.
+
+The \verb|Makefile|  for the esp32 port of OpenPEARL creates automatically all
+required links.
+
+\subsection{cc\_bin and run\_bin}
+The overall script 'prl' for compiling and linking of an OpenPEARL application
+needs platform specific commands to compile c++ files and link them with the 
+platform specific libraries.
+
+For each platform two files must be provided named 'cc\_bin.inc'
+and 'run\_bin.inc'. They are include during the installation of the OpenPEARL
+distribution in the overall 'prl' script.
+
+\section{Kconfig parameters}
+There are some parameters for the OpenPEARL configuration.
+\begin{description}
+\item[ESP32\_IDF\_PATH] must point to the installation location of yout ESP-IDF.
+\item[ESP32\_FLASH\_INTERFACE] must identify the device name
+   of your interface to the ESP32
+\end{description}
+More item may be available in future.
+
+\section{FreeRTOS}
+The ESP32-IDF provides a modified version of FreeRTOS which supports a kind of 
+symetric multiprocessing.
+This ESP-IDF component needs a \verb|FreeRTOSConfig.h| file.
+OpenPEARL needs some setting in the \verb|FreeRTOSConfig.h|. 
+This configuration is part of the OpenPEARL repository. The ESP-IDF provided
+configuration file is replaced by the OpenPEARL specific version.
+
+\section{Notes about updates in ESP-IDF}
+If a new release of ESP-IDF should be used, several checks must be done:
+\begin{itemize}
+\item update the \verb|sdkconfig| in the esp-idf-project in the repository.
+\item check changes in the ESP-IDF \verb|FreeRTOSConfig.h|
+\item update the xtensa compiler to the new version
+\item the FreeRTOS implementation of tasks.c and tasks.h was extended by one
+  funktion. This must be added by include in taskAddOns.c.inc and taskAddOns.h
+\end{itemize}
+
+\section{Open Issues}
+\subsection{Core Usage}
+Currently only one core is used.
+In future, the second core should be used also.
+The automatic restart of an application task assumes that only one processor core ist 
+available.
+There are two possibilities to overcome this obstancle:
+\begin{enumerate}
+\item enshure that all application tasks are on the same core and use the othr core for i/o-tasks
+\item add a patch to FreeRTOS to restart an overrun task automatically at its termination.
+\end{enumerate}
+
+\subsection{Esp32Uart Device}
+The ESP-IDF is subject of rapid changes. Therefore it is not 
+useful to modify any provides code for usage of the internal devices.
+
+Especially the uart is very complicated. Thus a separate FreeRTOS thread 
+is used for the write operation. The read operation uses the 
+provided mechanism with an event queue.
+
+Suspend and terminate during i/o operations are treated by a simulation
+of an receive event or semaphore unlocking for send done.
+
+
+\subsection{missing Device Drivers}
+\begin{enumerate}
+\item Console
+\item I2C
+\item Ethernet
+\item ...
+\end{enumerate}
+
+

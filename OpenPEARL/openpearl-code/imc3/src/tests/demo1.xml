@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module file="demo1.prl" name="demo1">
+<system>
+
+<username name="rpiBi3" line="400">
+  <sysname name="RPiDigitalIn">
+  <parameters>
+  <FIXED>9</FIXED>
+  <FIXED>2</FIXED>
+  <CHAR>'n'</CHAR>
+  </parameters>
+  </sysname>
+</username>
+
+<username name="bit1" line="200">
+  <sysname name="PCF8574In">
+  <parameters>
+   <BIT>'20'B4</BIT>
+   <FIXED>2</FIXED>
+   <FIXED>2</FIXED>
+  </parameters>
+  <association name="i2cbus1"/>
+  </sysname>
+</username>
+
+<username name="bit2" line="201">
+  <sysname name="PCF8574In">
+  <parameters>
+   <BIT>'20'B4</BIT>
+   <FIXED>2</FIXED>
+   <FIXED>1</FIXED>
+  </parameters>
+  <association name="i2cbus0"/>
+  </sysname>
+</username>
+
+<username name="bitout" line="202">
+  <sysname name="PCF8574Out">
+  <parameters>
+   <BIT>'20'B4</BIT>
+   <FIXED>0</FIXED>
+   <FIXED>1</FIXED>
+  </parameters>
+  <association name="i2cbus1"/>
+  </sysname>
+</username>
+
+
+<username name="lm75" line="4">
+   <sysname name="LM75">
+   <parameters>
+   <BIT>'49'B4</BIT>
+   </parameters>
+   <association name="I2CBus">
+      <parameters>
+        <CHAR>'/dev/i2c-2'</CHAR>
+      </parameters>
+   </association>
+   </sysname>
+</username>
+
+
+<username name="i2cbus1" line="7">
+   <sysname name="I2CBus">
+      <parameters>
+        <CHAR>'/dev/i2c-1'</CHAR>
+      </parameters>
+   </sysname>
+</username>
+
+<username name="i2cbus0" line="7">
+   <sysname name="I2CBus">
+      <parameters>
+        <CHAR>'/dev/i2c-0'</CHAR>
+      </parameters>
+   </sysname>
+</username>
+
+<username name="sig1" line="9">
+   <sysname name="FixedRangeSignal"/>
+</username>
+
+<username name="int1" line="10">
+  <sysname name="UnixSignal">
+    <parameters>
+      <FIXED>15</FIXED>
+    </parameters>
+  </sysname>
+</username>
+
+<username name="disc" line="12">
+  <sysname name="Disc">
+     <parameters>
+       <CHAR>'/tmp/folder1'</CHAR>
+       <FIXED>10</FIXED>
+     </parameters>
+  </sysname>
+</username>
+
+<username name="stdOut" line="14">
+  <sysname name="StdOut">
+  </sysname>
+</username> 
+
+<configuration line="16">
+  <sysname name="Log">
+    <parameters>
+     <CHAR>'EW'</CHAR>
+    </parameters>
+  <association name="stdOut">
+  </association>
+  </sysname>
+</configuration>
+
+</system>
+
+<problem>
+   <spc type="signal" name="sig1" line="19"/>
+   <spc type="interrupt" name="int1" line="20" />
+   <spc type="dation" name="bit1" line="25">
+      <attributes> IN,SYSTEM </attributes>
+      <data>BIT(2)</data>
+   </spc>
+   <spc type="dation" name="disc" line="21">
+      <attributes> OUT,SYSTEM </attributes>
+      <data>ALL</data>
+   </spc>
+   <spc type="dation" name="stdOut" line="22">
+      <attributes> OUT, SYSTEM </attributes>
+      <data>ALPHIC</data>
+   </spc>
+   <dcl type="FIXED(15)" name="f15" line="77"/>
+
+   <dcl type="TASK" name="t1" line="123"/>
+   <dcl type="SEMA" name="s1" line="123"/>
+
+   <dcl type="PROC" name="funktion1" line="111">
+     <parameters>FIXED(15) IDENT, FLOAT(24) </parameters>
+     <returns>BIT(1)</returns>
+   </dcl>
+</problem>
+</module>

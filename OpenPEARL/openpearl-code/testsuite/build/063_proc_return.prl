@@ -1,0 +1,32 @@
+MODULE(proc_return);
+
+PROBLEM;
+
+p1: PROC;
+   DCL x FIXED INIT(1);
+  
+   IF x > 0 THEN
+      x = x+1;
+      RETURN;
+   ELSE
+     x=10;
+     RETURN;
+   FIN;
+   x= -1;
+   RETURN; 
+END;
+
+p2: PROC (x FIXED IDENT) RETURNS(FIXED);
+   RETURN(x+1);
+END;
+
+! make automatic test happy
+main: TASK MAIN;
+   DCL a(10) FIXED;
+   DCL (x,y) FIXED;
+   x = 2;
+   y = p2(x);
+   y = p2(a(3));
+END;
+
+MODEND;

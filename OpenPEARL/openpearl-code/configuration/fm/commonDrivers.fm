@@ -1,0 +1,12 @@
+config CANSUPPORT
+	boolean "CAN support"
+	default n
+	help
+	This option enables CAN support at all in the OpenPEARL runtime system.
+	Check the plattform specific driver sections to select the CAN drivers.
+	Experimental!!! ---> Usually deselect this.
+
+
+config HAS_I2C
+
+

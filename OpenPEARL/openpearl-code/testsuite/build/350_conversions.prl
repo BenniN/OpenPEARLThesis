@@ -1,0 +1,72 @@
+MODULE(conversions);
+
+
+PROBLEM;
+
+charFixedConversions: PROC;
+   DCL char4 CHAR(4) INIT('ABCD');
+
+   IF char4.CHAR(4) NE 'D' THEN
+       __cpp__("printf(\"fail at ch1: ch = %x\\n\",_char4.data[3]);");
+   FIN;
+
+   IF TOFIXED char4.CHAR(4) NE TOFIXED 'D' THEN
+       __cpp__("printf(\" fail at  ch2: ch = %x\\n\",_char4.data[3]);");
+   FIN;
+   
+END;
+
+T1: TASK MAIN;
+   DCL ch CHAR;
+   DCL b16 BIT(16);
+   DCL f15 FIXED(15) INIT(48);
+   DCL x FLOAT(23);
+   DCL x52 FLOAT(52);
+   DCL f31 FIXED(31) INIT(100000);
+   DCL f50 FIXED(50) INIT(4000000000);
+
+   f50 = 10000000000;
+   f50 = 10*1000*1000*1000;    ! <<<< this will cause an FixedOverflowSignal
+				! <<<< since constant FIXED expressions are not
+				! <<<< supported yet
+   ch = TOCHAR (f15); 
+   IF ch NE '0' THEN
+       __cpp__("printf(\"fail at 1: ch = %x\\n\",_ch.data[0]);");
+   FIN;
+
+   b16 = TOBIT(f15);	     ! compiles
+   IF b16 NE '0030'B4 THEN
+       __cpp__("printf(\"fail at 2: b16 = %x\\n\",_b16.x);");
+   FIN;
+
+   f15 = TOFIXED(b16);       ! compiles
+   IF f15 NE 48 THEN
+       __cpp__("printf(\"fail at 3: f15 = %d\\n\",_f15.x);");
+   FIN;
+
+   f15 = TOFIXED(ch);        ! does not compile
+   IF f15 NE 48 THEN
+       __cpp__("printf(\"fail at 4: f15 = %d\\n\",_f15.x);");
+   FIN;
+
+   x52 = TOFLOAT(f50);
+   x52 = TOFLOAT(f31);
+   x = TOFLOAT(f15);
+   IF x NE 48.0 THEN
+       __cpp__("printf(\"fail at 5: x = %f\\n\",_x.x);");
+   FIN;
+
+   f31 = ENTIER(x);
+   IF f31 NE 48.0 THEN
+       __cpp__("printf(\"fail at 6: f31 = %d\\n\",_f31.x);");
+   FIN;
+
+   f15 = ENTIER(x)  FIT f15;
+   IF f15 NE 48.0 THEN
+       __cpp__("printf(\"fail at 7: f15 = %d\\n\",_f15.x);");
+   FIN;
+
+ 
+END;
+
+MODEND;

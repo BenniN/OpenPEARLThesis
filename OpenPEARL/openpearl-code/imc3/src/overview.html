@@ -1,0 +1,103 @@
+<html>
+<title>Overview</title>
+<body>
+<h1>Overview IMC V2
+
+<h2>Principle of Operation</h2>
+The IMC checks the compatibility of the module-module interface.
+The specifications and declarations of global elements must fit together.
+The declaration may occur in the PROBLEM-part as well as in the SYSTEM-part.
+By default, all elements in the sytem part are global.
+
+In order to complete the job, the IMC reads the module interace definition, which is created
+by the compiler as a XML-file with the same name as the compiled module.
+This XML-file contains information about
+<ul>
+<li>the system part with the definition of 
+   <ul>
+   <li>dations
+   <li>signals
+   <li>interrupts
+   <li>configuration 
+   </ul>
+<li>the problem part with  lkklk
+  <ol>
+   <li>definition of global elements like
+      <ul>
+      <li>tasks
+      <li>procedures
+      <li>variables
+      </ul>
+   <li>specifications of system part definitions
+   <li>specifications of global elements from other modules
+       (system part elements and problem part elements) 
+   </ol>
+</ul>
+
+The IMC creates dictionaries with the name and the location in the DOM-tree of
+the elements. Some other attributes for simple access enrich the entries 
+like line number of the enrty in the source file or usage flags to detect 
+unused definitions.
+
+Further details remain in the DOM-tree. 
+They are accessed on demand while processing the modules.
+
+<h2>Major build steps</h2>
+<ol>
+<li>Read the input files and create the dictionaries. 
+<li>run several checks about the correctness of invocation parameters,
+    conflicts of usage of nonsharable ressources, ...
+<li>if no error occurred, the represenation of the system parts of all modules
+  is created
+</ol> 
+Details about the check definition are located in the LaTeX documentation
+of the imc.
+
+
+<h1>XML-File Structure</h1>
+<h2>Platform Definition</h2>
+The platform definition is decribed in the LaTeX documentation of the IMC.
+
+<h2>Compiler Output per Module</h2>
+The compiler creates for each source file an interface definition file 
+in xml format.
+The system part is represented in the tree &lt;system&gt; 
+and the problem part in the tree $lt;problem&gt;.
+
+<h3>System Part</h3>
+The system part definition are ether &lt;username&gt; or &lt;configuration&gt;.
+Both may have &lt;parameters&gt; and &lt;associations&gt;.
+An association may also have pparameters.
+An association may be a username or another association.
+Associations are represented as subtree of the username or configuration tag.
+
+<h3>Problem Part</h3>
+The compiler creates &lt;spc> and &lt;dcl&gt; tags for specification
+ and declaration 
+of global symbols. These tags have the following attributes:
+<dl>
+<dt>name</dt><dd>the name of the symbol</dd>
+<dt>line</dt><dd>the line number of the declaraction or specification</dd>
+<dt>type</dt><dd>the type of the symbol. 
+  <ul>
+  <li>simple types, dations, signals, interrupts, tasks, semaphores and bolt
+      elements  are given in their PEARL nottaion with precission or length</li>
+  <li> arrays are denoted with prepended virtual dimnsion list (separated with space)</li>
+  <li>structs are denoted with their C++ identifier</li>
+  <li>REF is prepended literally with a space as separator</li>
+</dd>
+</dl>
+The attribute 'global' is optional and default
+ to the current module name.
+
+Dations have additional elements for their attributes and data type
+as described in  the platform definition.
+
+Procedures have additional tags parameters and returns for the 
+procedure parameters and the result type.
+The parameters is a comma separated string of all parameters as
+in a procedure secification. The return type ie encoded like the data
+tag in dations.
+
+</body>
+</html>

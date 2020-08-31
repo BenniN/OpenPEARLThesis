@@ -1,0 +1,3389 @@
+MODULE(convert);
+SYSTEM;
+termout: StdOut;
+
+PROBLEM;
+
+   SPC termout DATION OUT SYSTEM  ALPHIC;
+
+   DCL stdout DATION OUT ALPHIC DIM(*,80)
+             FORWARD NOCYCL  STREAM 
+             CREATED(termout);
+
+   DCL (testNbr,failed) FIXED;
+   DCL (totalNbrOfTests,totalTestsFailed) FIXED INIT(0,0);
+   DCL errorText INV CHAR(16) INIT('***error: test#');
+
+convertTests: TASK MAIN;
+ 
+     OPEN stdout;
+     CALL convertTo;
+     CALL convertFrom;
+
+     PUT 'total number of tests/failed:',
+        totalNbrOfTests,'/', totalTestsFailed
+     TO stdout BY SKIP,A,F(4),A,F(4),SKIP;
+
+     IF totalTestsFailed GT 0 THEN
+        __cpp__("pearlrt::Control::setExitCode(1);");
+     FIN;
+     
+     CLOSE stdout;
+END;
+
+convertTo: PROC;
+	convertToA;
+	addErrors;
+	convertToFixedF;
+	addErrors;
+	convertToFloatF;
+	addErrors;
+	convertToFloatE;
+	addErrors;
+	convertToD;
+	addErrors;
+	convertToT;
+	addErrors;
+        convertToB;
+	addErrors;
+	convertArraySliceToFixedF;
+	addErrors;
+END;
+
+convertFrom: PROC;
+	convertFromA;
+	addErrors;
+	convertFromFixedF;
+	addErrors;
+	convertFromFloatF;
+	addErrors;
+	convertFromFloatE;
+	addErrors;
+	convertFromD;
+	addErrors;
+	convertFromT;
+	addErrors;
+        convertFromB;
+	addErrors;
+	convertArraySliceFromFixedF;
+	addErrors;
+END;
+
+addErrors: PROC;
+   totalNbrOfTests = totalNbrOfTests + testNbr;
+   totalTestsFailed = totalTestsFailed + failed;
+END;
+
+convertToA: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+
+  PUT 'convertToA tests start' TO stdout BY SKIP,A,SKIP;
+  testNbr = 0;
+  failed = 0;
+
+  testNbr = testNbr + 1;
+  CONVERT 'hallo' TO buffer BY A;
+  IF buffer NE 'hallo ' THEN
+     PUT errorText,testNbr, 'expected ''hallo '' got ', buffer TO stdout 
+	BY A,F(3),A,A,SKIP;
+     failed = failed + 1;
+  FIN;
+ 
+  testNbr = testNbr + 1;
+  CONVERT 'hallo' TO buffer BY A(2);
+  IF buffer NE 'ha ' THEN
+     PUT errorText,testNbr, 'expected ''ha '' got ', buffer TO stdout 
+	BY A,F(3),A,A,SKIP;
+     failed = failed + 1;
+  FIN;
+ 
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT 'hallo' TO buffer BY RST(error),A(width);
+  IF error NE 405 THEN
+     PUT errorText,testNbr, 'wrong RST value: expected 405 got ',error TO stdout 
+	BY A,F(3),A,F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  width = -2;
+  testNbr = testNbr + 1;
+  CONVERT 'hallo' TO buffer BY RST(error),A(width);
+  
+  IF error NE 405 THEN
+     PUT errorText,testNbr, 'wrong RST value: expected 405 got ',error TO stdout 
+	BY A,F(3),A,F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+ 
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+ 
+END;
+/* ------------------------------------------------------
+   test field with versus data value
+   test zero and negative width
+   test negative decimals
+*/
+convertToFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToFixedF tests start' TO stdout BY SKIP,A,SKIP;
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 123 TO buffer BY RST(error), F(3);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE '123' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''123'' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test  value shorter leading spaces
+  testNbr = testNbr + 1;
+  CONVERT 1 TO buffer BY RST(error), F(3);
+  IF buffer NE '  1' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''  1'' got ''',buffer,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test: value shorter and negativ
+  testNbr = testNbr + 1;
+  CONVERT -1 TO buffer BY RST(error), F(3);
+  IF buffer NE ' -1' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected '' -1'' got ''',buffer,'''' 
+    TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test: value too large
+  testNbr = testNbr + 1;
+  CONVERT 1234 TO buffer BY RST(error), F(3);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  !! test: value too large
+  testNbr = testNbr + 1;
+  CONVERT -234 TO buffer BY RST(error), F(3);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  !! test: wrong format parameters negative width
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 123 TO buffer BY RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: wrong format parameters zero width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT 123 TO buffer BY RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test  wrong format parameters width too small
+  testNbr = testNbr + 1;
+  width = 2;
+  CONVERT 123 TO buffer BY RST(error), F(width);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: with precision: happy day
+  testNbr = testNbr + 1;
+  CONVERT 123 TO buffer BY RST(error), F(6,1);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF buffer NE ' 123.0' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected '' 123.0'' got ''',buffer,'''' 
+    TO stdout BY A,F(3),X,2A, SKIP;
+  FIN;
+
+  !! test: with precision: negative decimalPositions
+  width = -1;
+  testNbr = testNbr + 1;
+  CONVERT 123 TO buffer BY RST(error), F(6,width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+ 
+
+/* ------------------------------------------------------
+   test field with versus data value
+   test zero and negative width
+   test negative decimals
+*/
+convertToFloatF: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToFloatF tests start' TO stdout BY SKIP,A,SKIP;
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 1.3 TO buffer BY RST(error), F(3);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE '  1' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''  1'' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  ! test: rounding
+  CONVERT 1.6 TO buffer BY RST(error), F(3);
+  IF buffer NE '  2' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''  2'' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test  value shorter leading spaces
+  testNbr = testNbr + 1;
+  CONVERT 1.0 TO buffer BY RST(error), F(3);
+  IF buffer NE '  1' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''  1'' got ''',buffer,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test: value shorter and negativ
+  testNbr = testNbr + 1;
+  CONVERT -1.0 TO buffer BY RST(error), F(3);
+  IF buffer NE ' -1' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected '' -1'' got ''',buffer,'''' 
+    TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  !! test: value too large
+  testNbr = testNbr + 1;
+  CONVERT 1234.0 TO buffer BY RST(error), F(3);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  !! test: value too large
+  testNbr = testNbr + 1;
+  CONVERT -234.0 TO buffer BY RST(error), F(3);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  !! test: wrong format parameters negative width
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 123.0 TO buffer BY RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: wrong format parameters zero width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT 123.0 TO buffer BY RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test  wrong format parameters width too small
+  testNbr = testNbr + 1;
+  width = 2;
+  CONVERT 123.0 TO buffer BY RST(error), F(width);
+  IF error NE 408 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 408 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: with precision: happy day
+  testNbr = testNbr + 1;
+  CONVERT 123.0 TO buffer BY RST(error), F(6,1);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF buffer NE ' 123.0' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected '' 123.0'' got ''',buffer,'''' 
+    TO stdout BY A,F(3),X,2A, SKIP;
+  FIN;
+
+  !! test: with precision: negative decimalPositions
+  width = -1;
+  testNbr = testNbr + 1;
+  CONVERT 123.0 TO buffer BY RST(error), F(6,width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 404 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+ 
+/* ------------------------------------------------------
+   test field with versus data value
+   test zero and negative width
+   test negative decimals
+*/
+convertToFloatE: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL expect CHAR(20);
+  DCL largeFloat FLOAT(52);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToFloatE tests start' TO stdout BY SKIP,A,SKIP;
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 1.3 TO buffer BY RST(error), E(13,6);
+  expect = ' 1.300000E+00';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 13.0 TO buffer BY RST(error), E(13,6);
+  expect = ' 1.300000E+01';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT -700.0 TO buffer BY RST(error), E(9,1);
+  expect = ' -7.0E+02';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT -0.07 TO buffer BY RST(error), E(9,1);
+  expect = ' -7.0E-02';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 2721.0 TO buffer BY RST(error), E(8);
+  expect = '   3E+03';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  !! test:  happy day
+  testNbr = testNbr + 1;
+  error = -1;
+  CONVERT 2721.0 TO buffer BY RST(error), E3(9,1);
+  expect = ' 2.7E+003';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'RST value not reset' TO stdout 
+	BY A,F(3),A,SKIP;
+     failed = failed + 1;
+  FIN;
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! test: rounding
+  testNbr = testNbr + 1;
+  CONVERT 2713.6 TO buffer BY RST(error), E(11,2,4);
+  expect = '  27.14E+02';
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  
+  ! test: rounding
+  testNbr = testNbr + 1;
+  CONVERT 9999.9 TO buffer BY RST(error), E(11,2,4);
+  expect = '  10.00E+03';
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  
+!! test  value shorter leading spaces
+  testNbr = testNbr + 1;
+  CONVERT 1.0 TO buffer BY RST(error), E(13,1);
+  expect = '      1.0E+00';
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  !! test: value shorter and negativ
+  testNbr = testNbr + 1;
+  CONVERT -1.0 TO buffer BY RST(error), E(13,1);
+  expect = '     -1.0E+00';
+  IF buffer NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+  FIN;
+
+
+  !! test: value too large
+  testNbr = testNbr + 1;
+  largeFloat = 1000.0;
+  largeFloat = largeFloat * largeFloat * largeFloat;
+  largeFloat = largeFloat * largeFloat * largeFloat;
+  largeFloat = largeFloat * largeFloat * largeFloat;
+  largeFloat = largeFloat * largeFloat * largeFloat;
+  CONVERT largeFloat TO buffer BY RST(error), E(13,3);
+  IF error NE 412 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 412 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: large with E3 format
+  testNbr = testNbr + 1;
+  CONVERT largeFloat TO buffer BY RST(error), E3(14,3);
+  expect = '    1.000E+243';
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  ELSE
+    IF buffer  NE expect THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,5A,SKIP;
+    FIN;
+  FIN;
+
+  !! test: value too large
+  testNbr = testNbr + 1;
+  CONVERT -234.0 TO buffer BY RST(error), E(12,6);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  !! test: wrong format parameters negative width
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 123.0 TO buffer BY RST(error), E(width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test: wrong format parameters zero width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT 123.0 TO buffer BY RST(error), E(width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  !! test  wrong format parameters width too small
+  testNbr = testNbr + 1;
+  width = 2;
+  CONVERT 123.0 TO buffer BY RST(error), E(width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test  wrong format parameters decimal < 0
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 123.0 TO buffer BY RST(error), E(13,width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+  !! test  wrong format parameters decimal >= width
+  testNbr = testNbr + 1;
+  width = 13;
+  CONVERT 123.0 TO buffer BY RST(error), E(13,width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+
+  !! test  wrong format parameters significance < 1
+  testNbr = testNbr + 1;
+  width = 0;
+
+  CONVERT 123.0 TO buffer BY RST(error), E(13,5,width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+ 
+  !! test  wrong format parameters significance < decimals+1
+  testNbr = testNbr + 1;
+  width = 5;
+  CONVERT 123.0 TO buffer BY RST(error), E(13,5,width);
+  IF error NE 411 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 411 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+ 
+ 
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertToD: PROC;
+  DCL buffer CHAR(40) ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL expect CHAR(25);
+  DCL dur DURATION;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToD tests start' TO stdout BY SKIP,A,SKIP;
+
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 11 HRS 15 MIN TO   buffer BY RST(error),D(20);
+  !         1234567890123456789012345
+  expect = '11 HRS 15 MIN 00 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 0.1 SEC TO   buffer BY RST(error),D(24,3);
+  !         1234567890123456789012345
+  expect = ' 0 HRS 00 MIN 00.100 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 0.1 SEC TO   buffer BY RST(error),D(9,3);
+  expect = '0.100 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(9,2);
+  expect = '-0.10 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(16,2);
+  expect = '-0 MIN 00.10 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day with rounding
+  testNbr = testNbr + 1;
+  CONVERT -0.105 SEC TO   buffer BY RST(error),D(16,2);
+  expect = '-0 MIN 00.11 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day with rounding
+  testNbr = testNbr + 1;
+  CONVERT -0.105 SEC TO   buffer BY RST(error),D(9,2);
+  expect = '-0.11 SEC';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! field width too small 
+  testNbr = testNbr + 1;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(9,3);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 410 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! illegal width (>0 too small )
+  testNbr = testNbr + 1;
+  width = 3;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 402 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! illegal width (0 )
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 402 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! illegal width (<0 )
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 402 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! illegal decimals (<0 )
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 402 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! illegal decimals (>width-4 )
+  testNbr = testNbr + 1;
+  width = 16;
+  CONVERT -0.1 SEC TO   buffer BY RST(error),D(20,width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 402 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+ 
+convertToT: PROC;
+  DCL buffer CHAR(40) ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL expect CHAR(25);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToT tests start' TO stdout BY SKIP,A,SKIP;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 12:30:5.2 TO   buffer BY RST(error),T(12,1);
+  !         1234567890123456789012345
+  expect = '  12:30:05.2';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(8);
+  !         1234567890123456789012345
+  expect = ' 8:00:00';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day
+  testNbr = testNbr + 1;
+  CONVERT 12:30:5.2 TO   buffer BY RST(error),T(16,7);
+  !         1234567890123456789012345
+  expect = '12:30:05.2000000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! value too large for format
+  testNbr = testNbr + 1;
+  CONVERT 18:0:0 TO   buffer BY RST(error),T(7);
+  !         1234567890123456789012345
+  IF error NE 403 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 403 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  
+  ! value too large for format
+  testNbr = testNbr + 1;
+  CONVERT 18:0:0 TO   buffer BY RST(error),T(10,2);
+  !         1234567890123456789012345
+  IF error NE 403 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 403 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! width too small
+  testNbr = testNbr + 1;
+  width = 6;
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(width);
+  IF error NE 403 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 403 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+
+  ! width too small
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(width);
+  IF error NE 403 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 403 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  
+  !  precision too small
+  testNbr = testNbr + 1;
+  width = -1;
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(12,width);
+  IF error NE 403 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 403 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  
+  ! width small but ok
+  testNbr = testNbr + 1;
+  width = 4;
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(12,width);
+           !123456789012
+  expect = '8:00:00.0000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertToB: PROC;
+  DCL buffer CHAR(40) ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL expect CHAR(25);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertToB tests start' TO stdout BY SKIP,A,SKIP;
+
+  ! happy day B/B1
+  testNbr = testNbr + 1;
+  CONVERT '1'B TO   buffer BY RST(error),B;
+  !         1234567890123456789012345
+  expect = '1';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B2
+  testNbr = testNbr + 1;
+  CONVERT '1'B TO   buffer BY RST(error),B2;
+  !         1234567890123456789012345
+  expect = '2';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B3
+  testNbr = testNbr + 1;
+  CONVERT '1'B TO   buffer BY RST(error),B3;
+  !         1234567890123456789012345
+  expect = '4';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B4
+  testNbr = testNbr + 1;
+  CONVERT '1'B TO   buffer BY RST(error),B4;
+  !         1234567890123456789012345
+  expect = '8';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B/B1(w) with w longer than needed (zero fill at the end)
+  testNbr = testNbr + 1;
+  CONVERT '101'B TO   buffer BY RST(error),B(8);
+  !         1234567890123456789012345
+  expect = '10100000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B2(w) with w longer than needed (zero fill at the end)
+  testNbr = testNbr + 1;
+  CONVERT '101'B TO   buffer BY RST(error),B2(8);
+  !         1234567890123456789012345
+  expect = '22000000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B3(w) with w longer than needed (zero fill at the end)
+  testNbr = testNbr + 1;
+  CONVERT '101'B TO   buffer BY RST(error),B3(8);
+  !         1234567890123456789012345
+  expect = '50000000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B4(w) with w longer than needed (zero fill at the end)
+  testNbr = testNbr + 1;
+  CONVERT '101'B TO   buffer BY RST(error),B4(8);
+  !         1234567890123456789012345
+  expect = 'A0000000';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B/B1(w) with w shorter than needed (clipping)
+  testNbr = testNbr + 1;
+  CONVERT '101'B TO   buffer BY RST(error),B1(2);
+  !         1234567890123456789012345
+  expect = '10';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B2(w) with w shorter than needed (clipping)
+  testNbr = testNbr + 1;
+  CONVERT '10010101'B TO   buffer BY RST(error),B2(2);
+  !         1234567890123456789012345
+  expect = '21';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B3(w) with w shorter than needed (clipping)
+  testNbr = testNbr + 1;
+  CONVERT '101011011'B TO   buffer BY RST(error),B3(2);
+  !         1234567890123456789012345
+  expect = '53';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! happy day B4(w) with w shorter than needed (clipping)
+  testNbr = testNbr + 1;
+  CONVERT '10101101101'B TO   buffer BY RST(error),B4(2);
+  !        1234567890123456789012345
+  expect = 'AD';
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! illegal width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT '10101101101'B TO   buffer BY RST(error),B1(width);
+  !        1234567890123456789012345
+  expect = ' ';
+  IF error NE 406 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 406 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! illegal width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT '10101101101'B TO   buffer BY RST(error),B2(width);
+  !        1234567890123456789012345
+  expect = ' ';
+  IF error NE 406 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 406 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! illegal width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT '10101101101'B TO   buffer BY RST(error),B3(width);
+  !        1234567890123456789012345
+  expect = ' ';
+  IF error NE 406 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 406 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  ! illegal width
+  testNbr = testNbr + 1;
+  width = 0;
+  CONVERT '10101101101'B TO   buffer BY RST(error),B4(width);
+  !        1234567890123456789012345
+  expect = ' ';
+  IF error NE 406 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'wrong RST value; expected 406 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+  FIN;
+  IF buffer NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected ''',expect,''' got ''',buffer,''''
+     TO stdout BY A,F(3),X,5A,SKIP;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+ 
+convertArraySliceToFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL expect CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL x(10) FIXED;
+  DCL (start,end) FIXED INIT(2,4);
+
+  FOR i TO 10 REPEAT
+     x(i) := i;
+  END;
+
+  PUT 'convertArrayToFixedF tests start' TO stdout BY SKIP,A,SKIP;
+  testNbr = 0;
+  failed = 0;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(2:4) TO buffer BY F(3);
+  expect := '  2  3  4';
+  IF buffer NE expect THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
+	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(start:end) TO buffer BY F(3);
+  expect := '  2  3  4';
+  IF buffer NE expect THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
+	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(end:start) TO buffer BY RST(error),F(3);
+  IF error NE 326  THEN
+     PUT errorText,testNbr, 'expected error: 226 --  got:', error TO stdout 
+       BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+
+END;
+
+/* =================================================== */
+convertFromA: PROC;
+  DCL buffer  INV CHAR(40) INIT('abcdefghijklmnop') ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data CHAR(5);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromA tests start' TO stdout BY SKIP,A,SKIP;
+
+  testNbr = testNbr + 1;
+  data = '123';
+  CONVERT data FROM buffer BY A;
+  IF data NE 'abcde' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''abcde'' got ''',data,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+  
+  testNbr = testNbr + 1;
+  data = '123';
+  CONVERT data FROM buffer BY A(2);
+  IF data NE 'ab   ' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''ab   '' got ''',data,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+ 
+  testNbr = testNbr + 1;
+  width =0; 
+  data = '123';
+  CONVERT data FROM buffer BY RST(error),A(width);
+  IF error NE 405 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 405 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF data NE '123' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''123  '' got ''',data,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+
+  testNbr = testNbr + 1;
+  width =-2; 
+  data = '123';
+  CONVERT data FROM buffer BY RST(error),A(width);
+  IF error NE 405 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 405 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF data NE '123' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''123  '' got ''',data,'''' 
+	TO stdout BY A,F(3),X,2A,SKIP;
+  FIN;
+ 
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data FIXED(15);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromFixedF tests start' TO stdout BY SKIP,A,SKIP;
+
+  testNbr = testNbr + 1;
+  buffer = '123';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(1);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  ELSE
+     IF  data NE 1 THEN
+     PUT errorText,testNbr, 'expected value 1 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+     FIN;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7);
+  IF  data NE 123 THEN
+     PUT errorText,testNbr, 'expected value 123 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE 1 THEN
+     PUT errorText,testNbr, 'expected value 1 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 153   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE 2 THEN
+     PUT errorText,testNbr, 'expected value 2 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE -1 THEN
+     PUT errorText,testNbr, 'expected value -1 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-153   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE -2 THEN
+     PUT errorText,testNbr, 'expected value -2 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = ' 123  A';
+  CONVERT data FROM buffer BY  RST(error), F(7);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = 'A 123  ';
+  CONVERT data FROM buffer BY  RST(error), F(7);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=8;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  ! illegal character in field
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = ' x 123  ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  ! illegal character in field
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '   1x3  ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  ! illegal character in field
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '   123x ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  ! illegal character after field
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '   123x';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(6,width);
+  IF error NE 0 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 123 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 123 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromFloatF: PROC;
+  DCL buffer  CHAR(40) INIT('12345.6789012345') ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data FLOAT;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromFloatF tests start' TO stdout BY SKIP,A,SKIP;
+
+  testNbr = testNbr + 1;
+  buffer = '123';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(1);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  ELSE
+     IF  data NE 1.0 THEN
+     PUT errorText,testNbr, 'expected value 1 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+     FIN;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7);
+  IF  data NE 123.0 THEN
+     PUT errorText,testNbr, 'expected value 123 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE 1.23 THEN
+     PUT errorText,testNbr, 'expected value 1.23 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6,2),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 153   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE 1.53 THEN
+     PUT errorText,testNbr, 'expected value 2 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6,2),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE -1.23 THEN
+     PUT errorText,testNbr, 'expected value -1 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6,2),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-153   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),F(7,2);
+  IF  data NE -1.53 THEN
+     PUT errorText,testNbr, 'expected value -1.53 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6,2),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = ' 123  A';
+  CONVERT data FROM buffer BY  RST(error), F(7);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = 'A 123  ';
+  CONVERT data FROM buffer BY  RST(error), F(7);
+  IF error NE 408 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 408 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=8;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+    failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromFloatE: PROC;
+  DCL buffer  CHAR(40) INIT('12345.6789012345') ;
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data FLOAT;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromFloatE tests start' TO stdout BY SKIP,A,SKIP;
+
+  testNbr = testNbr + 1;
+  buffer = '123';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(3);
+  IF error NE 0 THEN
+     PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
+     TO stdout BY A,F(3),X,A,F(6),SKIP;
+    failed = failed + 1;
+  ELSE
+     IF  data NE 123.0 THEN
+     PUT errorText,testNbr, 'expected value 123.0 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+     FIN;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7);
+  IF  data NE 123.0 THEN
+     PUT errorText,testNbr, 'expected value 123.0 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = ' 123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF  data NE 123.0 THEN
+     PUT errorText,testNbr, 'expected value 123.0 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-123   ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-123E-0  ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '-123E+0  ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !1234567890
+  buffer = '-123E-000';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(8,2);
+  IF error NE 0 THEN
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !12345678
+  buffer = '-1.23E+2 ';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(8,2);
+  IF error NE 0 THEN
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !123456789
+  buffer = '-1.23E+02';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(9,2);
+  IF  data NE -123. THEN
+     PUT errorText,testNbr, 'expected value -123 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !123456789
+  buffer = '-1.23e+02';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(6,2);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !123456789
+  buffer = '-1.23E++2';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !12354567
+  buffer = '-1.23E++2';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(7,2);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+           !12345678
+  buffer = '-1.23E+x';
+  data = 555;
+  CONVERT data FROM buffer BY RST(error),E(8,2);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = ' 123  A';
+  CONVERT data FROM buffer BY  RST(error), E(7);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = 'A 123  ';
+  CONVERT data FROM buffer BY  RST(error), E(7);
+  IF error NE 412 THEN
+     PUT errorText,testNbr,' expected RST 412 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+  
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=0;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=8;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+  testNbr = testNbr + 1;
+  data=555;
+  buffer = '  123  ';
+  width=-2;
+  CONVERT data FROM buffer BY  RST(error), F(7,width);
+  IF error NE 404 THEN
+     PUT errorText,testNbr,' expected RST 404 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+    failed = failed + 1;
+  FIN;
+  IF  data NE 555 THEN
+     PUT errorText,testNbr, 'expected (unchanged) value 555 -- got ',data
+     TO stdout BY A,F(3),X,A,E(13,6),SKIP;
+    failed = failed + 1;
+  FIN;
+
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromD: PROC;
+  DCL buffer  CHAR(80);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data DURATION;
+  DCL expect DURATION;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromD tests start' TO stdout BY SKIP,A,SKIP;
+
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '1 HRS 0 MIN 0 SEC';
+  CONVERT data FROM buffer BY RST(error),D(17);
+  expect = 1 HRS 0 MIN 0 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day no spaces
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '1HRS0MIN0SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(17);
+  expect = 1 HRS 0 MIN 0 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day multiple spaces
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '  1  HRS  0  MIN  0  SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30);
+  expect = 1 HRS 0 MIN 0 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day decimals at seconds
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '1 HRS 0 MIN 0.5 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,3);
+  expect = 1 HRS 0 MIN 0.5 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day decimals at seconds and plus
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '+1 HRS 0 MIN 0.5 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,3);
+  expect = +1 HRS 0 MIN 0.5 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day decimals at seconds and negativ
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '-1 HRS 0 MIN 0.5 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,3);
+  expect = -1 HRS 0 MIN 0.5 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day decimals at seconds and discard decimal specification
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '1 HRS 0 MIN 0.55 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,1);
+  expect = 1 HRS 0 MIN 0.55 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day decimals at seconds and discard decimal specification
+  ! and leading zeros at hours, minutes and seconds
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '001 HRS 000 MIN 000.55 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,1);
+  expect = 1 HRS 0 MIN 0.55 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! happy day hours large
+  !         123456789012345678901234567890
+  testNbr = testNbr + 1;
+  buffer = '1000 HRS 0 MIN 0.55 SEC      ';
+  CONVERT data FROM buffer BY RST(error),D(30,1);
+  expect =  1000 HRS 0 MIN 0.55 SEC;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(24,3),A,D(24,3),A,SKIP;
+  FIN;
+
+  ! hours too large
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 1 HRS 2 MIN 3 SEC;
+  expect = data;
+  buffer = '12345678901 HRS 0 MIN 0.55 SEC                     ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! min too large
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 1 HRS 2 MIN 3 SEC;
+  expect = data;
+  buffer = '         01 HRS 60 MIN 0.55 SEC                     ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! sec too large
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 1 HRS 2 MIN 3 SEC;
+  expect = data;
+  buffer = '         01 HRS 0 MIN 60.55 SEC                     ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! correct values HRS missing
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 0 HRS 2 MIN 3 SEC;
+  expect = data;
+  buffer = '                2 MIN 3 SEC                     ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! correct values MIN missing
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 0 MIN 3 SEC;
+  expect = data;
+  buffer = '          2 HRS           3 SEC                     ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! correct values SEC missing
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      2 HRS     3 MIN                               ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+
+  ! typo in HRS
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      2 HRM     3 MIN  2 SEC                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! typo in MIN
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      2 HRS     3 MiN  2 SEC                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! typo in SEC
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      2 HRS     3 MIN  2 SEc                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! non digit in hrs
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      2x1 HRS     3 MIN  2 SEC                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! non digit in min
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      21 HRS    1x MIN  2 SEC                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+  ! non digit in sec
+  !         1234567890123456789012345678901234567890
+  testNbr = testNbr + 1;
+  data = 2 HRS 3 MIN 0 SEC;
+  expect = data;
+  buffer = '      21 HRS     31 MIN 1x2 SEC                          ';
+  CONVERT data FROM buffer BY RST(error),D(40,1);
+  IF error NE 410 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 410 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,SKIP;
+  FIN;
+
+
+  ! width <4
+  testNbr = testNbr + 1;
+           !12345678901234567890123456789012345678901234567890
+  buffer = '123 HRS 0 MIN 0.55 SEC                        ';
+  width=3;
+  data =  3HRS 0 MIN 0.55 SEC;
+  expect =  3HRS 0 MIN 0.55 SEC;
+  CONVERT data FROM buffer BY RST(error),D(width,1);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 402 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,'''',
+     ' delta: ',data-expect
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,A,D(35,10),SKIP;
+  FIN;
+
+  ! width >4, decimals <0
+  testNbr = testNbr + 1;
+           !12345678901234567890123456789012345678901234567890
+  buffer = '123 HRS 0 MIN 0.55 SEC                        ';
+  width=-3;
+  data =  3HRS 0 MIN 0.55 SEC;
+  expect =  3HRS 0 MIN 0.55 SEC;
+  CONVERT data FROM buffer BY RST(error),D(20,width);
+  IF error NE 402 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 402 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,'''',
+     ' delta: ',data-expect
+     TO stdout BY A,F(3),X,A,D(35,3),A,D(35,3),A,A,D(35,10),SKIP;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromT: PROC;
+  DCL buffer  CHAR(80);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL data CLOCK;
+  DCL expect CLOCK;
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromT tests start' TO stdout BY SKIP,A,SKIP;
+
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(11,2);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(11,0);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day  skip training spaces
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(14,2);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day -- ignore decimals and skip trailing spaces
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(14,0);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+  expect = 1:2:3;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day leading zeros for hours
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '001:02:03       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+  expect = 1:2:3;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day leading zeros for minutes
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '1:0002:03       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+  expect = 1:2:3;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day leading zeros for seconds
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '1:02:0003       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+  expect = 1:2:3;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! illegal hours
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '24:02:03       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+  expect = 0:2:3; 
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! illegal hours -- overflow
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '2468024678901243686363633636:02:03           ';
+  data = 0:2:3; 
+  expect = 0:2:3; 
+  CONVERT data FROM buffer BY RST(error),T(30);
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+
+  ! illegal minutes
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '11:60:03       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal minutes - overflow
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '11:600009912390:03       ';
+  CONVERT data FROM buffer BY RST(error),T(16);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal seconds
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '11:03:60       ';
+  CONVERT data FROM buffer BY RST(error),T(10);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal formats
+  testNbr = testNbr + 1;
+  buffer = '11:03:06       ';
+  width = 4;
+  CONVERT data FROM buffer BY RST(error),T(width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '1x:03:06       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11:x3:06       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11:03:06x       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11:03:06  x     ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11.03:06       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11:03.06       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! illegal data
+  testNbr = testNbr + 1;
+  buffer = '11:03:06,       ';
+  width = 5;
+  CONVERT data FROM buffer BY RST(error),T(12,width);
+
+  IF error NE 407 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 407 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertFromB: PROC;
+  DCL buffer CHAR(80);
+  DCL error FIXED(15);
+  DCL b1 BIT;
+  DCL b3 BIT(3);
+  DCL b4 BIT(4);
+  DCL b6 BIT(6);
+  DCL b8 BIT(8);
+  DCL b16 BIT(16);
+  DCL b32 BIT(32);
+  DCL b64 BIT(64);
+  DCL expect BIT(64);
+
+  testNbr = 0;
+  failed = 0;
+
+  PUT 'convertFromB tests start' TO stdout BY SKIP,A,SKIP;
+
+  ! start B1 format
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '0       ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B(1);
+  expect = '0'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b1 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b1,''''
+     TO stdout BY A,F(3),X,A,B(1),A,B(1),A,SKIP;
+  FIN;
+
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '  0       ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B(4);
+  expect = '0'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b1 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b1,''''
+     TO stdout BY A,F(3),X,A,B(1),A,B(1),A,SKIP;
+  FIN;
+
+  ! error bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 01       ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B(4);
+  expect = '1000'B1;
+
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! error illegal characters in bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 0x       ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B(4);
+  expect = '1000'B1;
+
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! error  field empty
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '          ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B(4);
+  expect = '1000'B1;
+
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! start B2 format
+  ! happy day  B2-format
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '  0       ';
+  b3 = '1'B1;
+  CONVERT b3 FROM buffer BY RST(error),B2(4);
+  expect = '0'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b3 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b3,''''
+     TO stdout BY A,F(3),X,A,B2(1),A,B2(1),A,SKIP;
+  FIN;
+
+  ! error bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 01       ';
+  CONVERT b3 FROM buffer BY RST(error),B2(4);
+
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! ok, trailing zero on input discarded
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 12       ';
+  CONVERT b3 FROM buffer BY RST(error),B2(4);
+  expect = '011'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b3 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b3,''''
+     TO stdout BY A,F(3),X,A,B2(2),A,B2(2),A,SKIP;
+  FIN;
+
+  ! error illegal characters in bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 0x       ';
+  b1 = '1'B1;
+  CONVERT b3 FROM buffer BY RST(error),B2(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! error  field empty
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '          ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B2(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! start B3 format
+  ! happy day  B3-format
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '  2       ';
+  b3 = '1'B1;
+  CONVERT b3 FROM buffer BY RST(error),B3(4);
+  expect = '010'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b3 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b3,''''
+     TO stdout BY A,F(3),X,A,B3(1),A,B3(1),A,SKIP;
+  FIN;
+
+  ! error bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 01       ';
+  CONVERT b3 FROM buffer BY RST(error),B3(4);
+
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! ok, trailing zero on input discarded
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 14       ';
+  CONVERT b4 FROM buffer BY RST(error),B3(4);
+  expect = '0011'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b4 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b4,''''
+     TO stdout BY A,F(3),X,A,B3(2),A,B3(2),A,SKIP;
+  FIN;
+
+  ! error illegal characters in bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 0x       ';
+  b1 = '1'B1;
+  CONVERT b3 FROM buffer BY RST(error),B3(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! error  field empty
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '          ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B3(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! start B4 format
+  ! happy day  B4-format
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '  0       ';
+  b8 = '1'B1;
+  CONVERT b8 FROM buffer BY RST(error),B4(4);
+  expect = '0'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b8 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b8,''''
+     TO stdout BY A,F(3),X,A,B4(1),A,B4(1),A,SKIP;
+  FIN;
+
+  ! ok, shift bits to left
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 12       ';
+  CONVERT b6 FROM buffer BY RST(error),B4(4);
+  expect = '48'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b6 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b6,''''
+     TO stdout BY A,F(3),X,A,B4(2),A,B4(2),A,SKIP;
+  FIN;
+
+  ! ok, trailing zero on input discarded
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 14       ';
+  CONVERT b6 FROM buffer BY RST(error),B4(4);
+  expect = '010100'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b6 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b6,''''
+     TO stdout BY A,F(3),X,A,B4(2),A,B4(2),A,SKIP;
+  FIN;
+
+  ! error illegal characters in bit string too large 
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 0x       ';
+  b1 = '1'B1;
+  CONVERT b4 FROM buffer BY RST(error),B4(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! error  field empty
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '          ';
+  b1 = '1'B1;
+  CONVERT b1 FROM buffer BY RST(error),B4(4);
+  IF error NE 409 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+  ! tests with more than 1 byte internal storage
+  ! only happy day scenarios
+
+  ! b16
+  testNbr = testNbr + 1;
+  buffer = ' 1456     ';
+  CONVERT b16 FROM buffer BY RST(error),B4(4);
+  expect = '145'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b16 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b16,''''
+     TO stdout BY A,F(3),X,A,B4(4),A,B4(4),A,SKIP;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '1456     ';
+  CONVERT b16 FROM buffer BY RST(error),B4(4);
+  expect = '1456'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b16 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b16,''''
+     TO stdout BY A,F(3),X,A,B4(4),A,B4(4),A,SKIP;
+  FIN;
+
+
+  ! b32
+  testNbr = testNbr + 1;
+  buffer = ' 12345678     ';
+  CONVERT b32 FROM buffer BY RST(error),B4(8);
+  expect = '1234567'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b32 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b32,''''
+     TO stdout BY A,F(3),X,A,B4(8),A,B4(8),A,SKIP;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '12345678     ';
+  CONVERT b32 FROM buffer BY RST(error),B4(8);
+  expect = '12345678'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b32 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b32,''''
+     TO stdout BY A,F(3),X,A,B4(8),A,B4(8),A,SKIP;
+  FIN;
+
+  ! b64
+  testNbr = testNbr + 1;
+  buffer = ' 1234567890ABCDEF4     ';
+  CONVERT b64 FROM buffer BY RST(error),B4(16);
+  expect = '1234567890ABCDE0'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b64 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b64,''''
+     TO stdout BY A,F(3),X,A,B4(16),A,B4(16),A,SKIP;
+  FIN;
+
+  testNbr = testNbr + 1;
+  buffer = '1234567890ABCDEF4     ';
+  CONVERT b64 FROM buffer BY RST(error),B4(16);
+  expect = '1234567890ABCDEF'B4;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b64 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b64,''''
+     TO stdout BY A,F(3),X,A,B4(16),A,B4(16),A,SKIP;
+  FIN;
+
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+convertArraySliceFromFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL x(10) FIXED;
+  DCL expect(10) FIXED INIT(0,2,3,4,0);
+
+
+  DCL (start,end) FIXED INIT(2,4);
+
+
+  PUT 'convertArrayFromFixedF tests start' TO stdout BY SKIP,A,SKIP;
+  testNbr = 0;
+  failed = 0;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(2:4) FROM '  2  3  4' BY F(3);
+  IF NOT arrayCompare(x,expect) THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', x TO stdout 
+	BY A,F(3),A,10F(3),SKIP,X(23),A,10F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(start:end) FROM '  2  3  4 ' BY F(3);
+  IF NOT arrayCompare(x,expect) THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', x TO stdout 
+	BY A,F(3),A,10F(3),SKIP,X(23),A,10F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(end:start) FROM '  2  3  4 ' BY RST(error),F(3);
+  IF error NE 326 THEN
+     PUT errorText,testNbr, 'expected: error 326 -- got:', error TO stdout 
+	BY A,F(3),A,F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+arrayCompare: PROC(x() FIXED IDENT, y() FIXED IDENT) RETURNS (BIT(1));
+   IF (UPB x NE UPB y) THEN
+      PUT 'arrayCompare: array size mismatch' TO stdout BY A, SKIP;
+      RETURN ('0'B1);
+   FIN;
+
+   FOR i TO UPB x REPEAT
+      IF x(i) NE y(i) THEN
+         RETURN ('0'B1);
+      FIN;
+   END;
+   RETURN ('1'B1);
+END;
+MODEND;
+

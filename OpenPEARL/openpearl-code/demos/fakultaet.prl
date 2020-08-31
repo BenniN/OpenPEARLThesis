@@ -1,0 +1,35 @@
+MODULE(m_fak);
+
+SYSTEM;
+   stdout: StdOut;
+
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+fak: PROC(n FIXED(63)) RETURNS (FIXED(63));
+   DCL result FIXED(63);
+
+   IF n EQ 1 THEN
+      result = 1;
+   ELSE
+      result = (n*fak(n-1));
+   FIN;
+
+   ! currently we do not trace the control flow. Thus we need the 
+   ! RETURN as last statement
+   RETURN(result);
+END;
+
+
+hello: TASK MAIN;
+   OPEN termout;
+   PUT 'n       :       n!' TO termout BY A, SKIP;
+   FOR i TO 50 REPEAT
+    PUT i, fak(i) TO termout BY F(3),F(22),SKIP;
+   END;
+   CLOSE termout;
+END;
+
+MODEND;
+

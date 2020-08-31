@@ -1,0 +1,586 @@
+\chapter{Platform Specific Names}
+
+\section{Introduction}
+Each specific platform may support a different set of system names.
+Thus each target platform is characterized by a separate xml-file.
+These files are created during the build phase of the runtime system
+for each target platform.
+
+All possible system elements are located as unordered separate 
+elements under the root tag \verb|platform|.
+For the individual types of system elements, the following tags are
+provided:
+\begin{itemize}
+\item \verb|<signal ...>| defines a system signal
+\item \verb|<interrupt ...>| defines a system interupt
+\item \verb|<dation ...>| defines a system dation
+\item \verb|<configuration ...>| defines a configuration item
+\item \verb|<connection ...>| defines a association provider, if 
+   non of the above fit
+\end{itemize}
+
+These elements may have attributes 
+\begin{description}
+\item [name] is the system name
+\end{description}
+
+These elements may have other elements as subtree to define parameters, associations and checks.
+
+\paragraph{Note:} The tags are interpreted by the IMC case insensitive. The XML-reader 
+expects a  proper XML structure.
+
+\section{Tags in the XML-File}
+\subsection{Signal-Tag}
+The signal tag contains only the attribute \verb|name| for the
+system signal name.
+
+\subsection{Interrupt-Tag}
+The interrupt tag contains the attribute \verb|name| for the
+system interrupt name.
+Possible parameters are listed as subtree \verb|<parameters>|.
+
+\subsection{Dation-Tag}
+The dation tag contains the attribute \verb|name| for the
+system dation name.
+Possible parameters are listed as subtree \verb|<parameters>|.
+Possible attributes are listed as subtree \verb|<attributes>|.
+Possible associations to this element are
+ listed as subtree \verb|<associationProvider>|.
+
+
+\subsection{Configuration-Tag}
+The configuration element has the same structure as the dation tag
+except the attribute \verb|name|, which has not to be present.
+
+\paragraph{Note:} A special configuration tag is reserved for
+blocking of gpio bits, which are used by system devices like i2c or 
+other applications.
+\begin{XMLCode}
+<configuation name="reservedGpios" autoInstanciate="1">
+  <checks>
+    <check pinDoesNotCollide="RPiGPIO" bitList="0,1,2,4,6,26"/>
+  </checks>
+</configuration>
+\end{XMLCode}
+Regard:
+\begin{itemize}
+\item autoInstanciate forces one instance to be created automatically.
+  This attribute prohibits the usage by the PEARL application in the system part
+\item pinDoesNotCollide must have  the same name as used in the gpio rules in 
+   e.g. RPiDigitalIn.xml
+\item bitList is created from the the configuration item in \textit{menuconfig}.
+The tool \texttt{convertList} is used in the \textit{Makefile} to create this list.
+\end{itemize}
+
+\subsection{Associations}
+The connection between two system elements is treated by the following
+elements:
+
+\begin{itemize}
+\item \verb|<needAssociation>| with the attribute 
+ \verb|name| and the identifier of the expected interface. The 
+  interface names are described in the runtime documentation. 
+\item \verb|<associationProvider>|  with elements \verb|<associationType>|.
+  Attributes for an associationType are:
+  \begin{itemize}
+   \item  \verb|<name>|,  which is an unique free selectable
+     identifier for this kind of  association.
+   \item \verb|<clients>|  if given it is the number of allowed
+      clients for this connection provider. If not given, there is no
+      limits of allowed clients.
+   \end{itemize} 
+\end{itemize}
+
+\paragraph{Note:} An association may have another association.
+ 
+\section{Parameters}
+Only parameters of system elements of types bit, fixed and char are supported.
+The actual value may be restricted to definite values and ranges.
+
+Each parameter tag must have an attribute name, which is used as nickname 
+for checks of allowed values, combinational useage and error messages.
+The name must consist only of characters. Camelcase notation should be used.
+
+Tags are defined for each of them:
+\begin{itemize}
+\item \verb|BIT| with the attribute \verb|length|, which specifies the 
+   allowed length of an actual parameter. \verb|<BIT length="8">...</BIT>|
+   specifies a BIT(8) parameter. Shorter actual parameters are extended --- 
+   longer parameters induce an error message.
+\item \verb|FIXED| with the attribute \verb|length|, which specifies the 
+   allowed length of an actual parameter. \verb|<FIXED length="15">...</FIXED>|
+   specifies a FIXED(15) parameter. Shorter actual parameters are extended --- 
+   longer parameters induce an error message.
+\item \verb|CHAR| with the attribute \verb|length|, which specifies the 
+   allowed length of an actual parameter. \verb|<CHAR length="15">...</CHAR>|
+   specifies a CHAR(15) parameter. Shorter actual parameters are allowed --- 
+   longer parameters induce an error message.
+\end{itemize}
+
+\subsection{Expressions and Checks for and upon Parameter Values}
+Parameters are checked by the IMC against some rules. Each parameter
+must provide the attribute name, which  consists only of characters. 
+
+In rules these parameters may be used in expressions.
+To access a parameter name, an '\$' must be used as prefix.
+Expressions are supported for integer results. The expression 
+evaluator treats only the type integer.
+Nested expressions must be placed in square brackets:
+e.g. \verb|anyText[$start+3]anyOtherText|.
+
+
+Supported rules:
+
+\begin{tabular}{|l|c|p{8cm}|}
+\hline
+rule & type & description \\
+\hline
+VALUES & BIT,FIXED, CHAR &
+   a comma separated list of allowed values
+   is given. Other values produce an error message. 
+No nicknames or expressions are allowed.\\
+\hline
+ConsistsOf & CHAR &
+a comma separated list of allowed values is given. 
+The actual parameter must consist of only one or more of these
+elements.
+No name references or expressions are allowed.\\
+\hline
+NotEmpty & CHAR & 
+   at least one character is required \\   
+\hline
+FIXEDRANGE & FIXED &
+   two comma separated integers or expressions with nicknames
+ limits the allowed range
+   of actual values --- borders included \\ 
+\hline
+FIXEDGT & FIXED &
+   one integer or expression with nicknames
+ limits the allowed range at the low side
+   of actual value --- border NOT included \\ 
+\hline
+\end{tabular}
+
+\paragraph{Note:} If other checks are needed, they must become implemented in 
+\verb|checks/CheckSyspart.java|.
+
+\section{Consistency Checks between all System Part Elements}
+Different system part elements may violate some hardware restictions.
+Thus an GPIO pin may only be used as input or output, or on microcontrollers
+an GPIO may only be used as digital io or as alternate function like UART comminication.
+
+The XML-tag \verb|<check...>| defines checks, which are executed
+over all defines system elements in all modules.
+
+\subsection{Types of Checks}
+%Depending on the concrete system element 
+%\begin{itemize}
+%\item only one instance is allowed, or
+%\item multiple instances are allowed as long as some parameters differ, or
+%\item e.g. on I2C devices, the I2C address must be unique / not unique on 
+%a dedicated i2c bus.  
+%\item GPIO bits a microcontrollers and I2C port expander may only used once, or
+%\item a multiplexer channel of a dedicated device may only be used once, or
+%\item ...
+%\end{itemize}
+
+If such a restriction applies  to a system element some rules must be supplied 
+in the platform definition.
+
+To some restrictions must have access to instance parameters and instance association.
+Instance parameters are accessed via \$ and their name.
+
+\subsubsection{Number of Instances}
+\begin{description}
+\item[instances="1"] only one instance of the platform system element
+   is allowed (like  Log, Console or StdIn)
+\item[instances="oncePerSet" set="..."] defines that only one instance with a 
+  specified set of parameters are allowed. To define a set we have access to 
+  all parameter names and in case of associations the complete association list.
+  The attribute set defines a string identifying the set selector. 
+  \newline
+  Example: Several I2C busses in a system need different system interfaces
+
+  \begin{PEARLCode}
+  SYSTEM;
+     ! this sample is ok, different unix interfaces
+     i2cbus0 : I2CBus('/dev/i2c-0');
+     i2cbus1 : I2CBus('/dev/i2c-1');
+  \end{PEARLCode}
+
+  Check definition in platform:
+  
+  \begin{verbatim}
+  <connection name="I2CBus" ...>
+    <parameters>
+       <CHAR name ="deviceName" length="32767">
+          <NotEmpty />
+       </CHAR>
+    </parameters>
+    ...
+    <check instances="oncePerSet" set="I2CBus($deviceName)"/>
+  \end{verbatim}
+
+  The imc maintains a list of all instances of the platform element.
+  Multiple instances with different \textit{deviceNames} are ok.
+  Multiple instances with the same \textit{deviceName} result is
+  error messages.
+
+  The example enshures that there is only one instanciation of 
+  one I2C interface. 
+\end{description}
+
+\subsubsection{Pin Usage does not collide}
+I/o bits are available on GPIOs of microcontrollers and on port expanders.
+The adressing of bits are traditionally done by the parameters
+\textit{most significant bit numer} and
+\textit{number of bits}. These two parameter define the i/o bits of the 
+digital i/o component.
+
+Especially on microcontrollers other system devices use GPIO bits, which 
+are only available for ether digital i/o or special function.
+
+\begin{description}
+\item[pinDoesNotCollide="..."]
+
+Example: PCF8574-port expander on the I2CBus('/dev/i2c-0')
+  \begin{PEARLCode}
+  i2cBus: I2CBus('/dev/i2c-0');
+  !                             76543210
+  ! conflict bitsIn3 use bits     xxx
+  !          bitsOut4            xxx
+  ! bits 5 and 4 are used duplicate 
+  bitsIn3:  PCF8574In('44'B4, 5, 3) --- i2cBus;
+  bitsOut4: PCF8574In('44'B4, 6, 3) --- i2cBus;
+  \end{PEARLCode}
+
+  Check definition in platform:
+  \begin{verbatim}
+  <check pinDoesNotCollide="PCF8574($i2cAddr)" start="$start" width="$width"/>  
+  \end{verbatim}
+  \begin{itemize}
+  \item The complete chain of association providers is added automatically
+  the pinDoesNotCollide selector. 
+  The provider evaluates to \verb|I2CBus('/dev/i2c-0')| even
+  the provider is specified by an user supplied name.
+
+  \item \verb|PCF8574| is a fixed text. The same text will be used in the PCF8574In
+  device prohibiting the usage of a bit simultaneously as input and output.
+
+  \item \verb|$i2cAddr| evaluates to \verb|'44B4'|
+
+  \item \verb|$start| evaluates to  5 at bitsIn3 
+
+  \item \verb|$width| evaluates to 3
+
+  \end{itemize}
+
+The imc creates a list of used pins on the given instance. 
+Note that the numbers are not identical to the pin numbers of
+the i/o chip. 
+In case a pin is already allocated by another instance an error
+message will be emitted.
+
+Note that \$width is optional and defaults to 1.
+
+Note that an optional attribute \verb|errorText=".."| exists, which allows 
+to modify the error message. This is useful to create more compreghensive 
+error messages if the check is applied on e.g. adc multiplexer channels:
+ \texttt{errorText="adc channel"}, which replaces the default text "pin".
+
+\item[i2cAdrDoesNotCollide="..."] adresses the problem that 
+  different i2c devices must have different adresses on a dedicated
+  i2c bus. E.g. in case of port expander we may have multiple
+  instances of the same i2c device on the same bus.
+
+  Example: 
+
+  \begin{PEARLCode}
+  SYSTEM;
+    ! all ok; bits3 and bits2 use diffenent pins they use
+    ! the same i2c device PCF8574.
+    i2cbus: I2CBus('dev/i2c-0');
+    bits3: PCF8574In('44'B4, 5, 3) --- i2cbus;
+    bits2: PCF8574In('44'B4, 7, 2) --- i2cbus;
+    temp1: LM75('48') --- i2cbus;
+    temp1: LM75('49') --- i2cbus;
+  \end{PEARLCode}
+
+  Checks definition in platform:
+
+  \begin{verbatim}
+  <dation name="PCF8574In" ..
+      <parameters>
+      ...
+     </parameters>
+     <needAssociation name="I2CBusProvider"/>
+     <checks>
+     <check i2cAdrDoesNotCollide="PCF8574" sharable="$iicAdr" />
+     <check pinDoesNotCollide="..." />
+     </checks>
+
+   ...
+  <dation name="PCF8574Out" ..
+      <parameters>
+      ...
+     </parameters>
+     <needAssociation name="I2CBusProvider"/>
+     <checks>
+        <check i2cAdrDoesNotCollide="PCF8574" sharable="$iicAdr" />
+        <check pinDoesNotCollide="..." />
+     </checks>
+   ...
+
+   <dation name="LM75" ...
+     <system name="LM75">
+     ...
+     <needAssociation name="I2CBusProvider"/>
+     ...
+     <checks>
+     <check i2cAdrDoesNotCollide="LM75" nonSharable="$iicAdr" />
+     </checks>
+
+        <connection name="I2CBus">
+         <parameters>
+            <CHAR name="deviceName" length="32767">
+               <NotEmpty />
+            </CHAR>
+         </parameters>
+         <associationProvider>
+            <associationType name="I2CBusProvider" />
+         </associationProvider>
+         <checks>
+           <check instances ="oncePerSet" set="I2CBus($deviceName)"/>
+         </checks>
+      </connection>
+
+  \end{verbatim}
+
+  \paragraph{Note:} The name of the parameter \verb|iicAdr| must not be written
+  as \verb|i2cAdr| since a parameter name consists only of letters.
+
+  The imc maintains a list of all I2CBusProvider elements.
+  For each I2CBusProvider the imc maintains a list of all  i2c components
+  on this i2c bus.
+  If the same  adress is used by different devices we have an error condition.
+  If the same  adress is used by the same device we have an error condition if
+  the device does not support multiple usage like a port expander.
+\end{description}
+
+If more checks are required, they can be added in \texttt{imc/checks}. 
+
+\section{Platform File}
+Each system part elements is represented by a driver in the OpenPEARL 
+source tree and an XML-snipplet. These snipplets are
+concatenated to the Platform Definition File during the build  process.
+
+Example:
+\begin{XMLCode}
+<?xml version="1.0" encoding="UTF-8"?>
+<platform file="testPlatform.xml">
+      <signal name="FixedRangeSignal"/>
+      <signal name="FixedDivideByZeroSignal"/>
+      <signal name="FloatIsNaNSignal"/>
+
+      <interrupt name="UnixSignal">
+         <parameters>
+            <FIXED name="signalNumber" length="31">
+               <VALUES>1,2,3,15,16,17</VALUES>
+            </FIXED>
+         </parameters>
+      </interrupt>
+
+      <dation name="Disc">
+         <parameters>
+            <CHAR name="dir" length="32767"/>	<!-- beliebiger String -->
+            <FIXED name="nbrOfFiles" length="31">
+               <FIXEDRANGE>1,9999</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+         <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+         <data>ALL</data>
+         <associationProvider>
+            <associationType name="NamedAlphicOutProvider" />
+         </associationProvider>
+      </dation>
+
+      <dation name="StdIn">
+         <parameters>
+         </parameters>
+         <attributes>
+            FORWARD, IN	, SYSTEM
+         </attributes>
+         <DATA>ALPHIC</DATA>
+         <checks>
+           <check instances="1"/>
+         </checks>
+      </dation>
+
+      <dation name="StdOut">
+         <parameters>
+         </parameters>
+	 <attributes>
+            FORWARD, OUT, SYSTEM
+         </attributes>
+         <data>ALPHIC</data>
+         <associationProvider>
+            <associationType name="AlphicOutProvider" />
+         </associationProvider>
+         <checks>
+           <check instances ="1"/>
+         </checks>
+      </dation>
+
+      <connection name="I2CBus">
+         <parameters>
+            <CHAR name="deviceName" length="32767">
+               <NotEmpty />
+            </CHAR>
+         </parameters>
+         <associationProvider>
+            <associationType name="I2CBusProvider" />
+         </associationProvider>
+         <checks>
+           <check instances ="oncePerSet" set="I2CBus($deviceName)"/>
+         </checks>
+      </connection>
+
+      <dation name="LM75">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4,'48'B4, '49'B4, '4A'B4, '4B'B4,
+                       '4C'B4, '4D'B4 , '4E'B4, '4F'B4</VALUES>
+            </BIT>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, IN
+         </attributes>
+         <data>FIXED(15)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check i2cAdrDoesNotCollide="LM75"
+                   nonShareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+      <dation name="PCF8574In">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4, '21'B4, '22'B4, '23'B4,
+                       '24'B4, '25'B4 , '26'B4, '27'B4,
+                       '38'B4, '39'B4 , '3A'B4, '3B'B4,
+                       '3C'B4, '3D'B4 , '3E'B4, '3F'B4
+               </VALUES>
+            </BIT>
+            <FIXED length="7" name="start">
+               <FIXEDRANGE>0,7</FIXEDRANGE>
+            </FIXED>
+            <FIXED length="7" name="width">
+               <FIXEDRANGE>1,[$start+1]</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, IN
+         </attributes>
+         <data>BIT($width)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check pinDoesNotCollide="PCF8574xx(I2cAdr=$iicAdr)" 
+		start="$start" width= "$width" />
+           <check i2cAdrDoesNotCollide="PCF8574"
+                   shareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+      <dation name="PCF8574Out">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4, '21'B4, '22'B4, '23'B4,
+                       '24'B4, '25'B4 , '26'B4, '27'B4,
+                       '38'B4, '39'B4 , '3A'B4, '3B'B4,
+                       '3C'B4, '3D'B4 , '3E'B4, '3F'B4
+               </VALUES>
+            </BIT>
+            <FIXED length="7" name="start">
+               <FIXEDRANGE>0,7</FIXEDRANGE>
+            </FIXED>
+            <FIXED length="7" name="width">
+               <FIXEDRANGE>1,[$start+1]</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, OUT
+         </attributes>
+         <data>BIT($width)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check pinDoesNotCollide="PCF8574xx(I2cAdr=$iicAdr)" 
+		start="$start" width= "$width"/>
+           <check i2cAdrDoesNotCollide="PCF8574"
+                   shareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+  <configuration name="Log">
+    <parameters>
+      <CHAR name="loglevel" length="4">
+         <NotEmpty/>
+      </CHAR>
+    </parameters>
+    <needAssociation name="AlphicOutProvider"/>
+    <checks>
+       <check instances ="1"/>
+    </checks>
+  </configuration>
+
+   <connection name="LogFile">
+      <parameters>
+         <CHAR name="fileName" length="32767">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <needAssociation name="NamedAlphicOutProvider"/>
+   </connection>
+
+   <dation name="RPiDigitalIn">
+      <parameters>
+         <FIXED name="start" length="31">
+             <FIXEDRANGE>0,27</FIXEDRANGE>
+         </FIXED>
+         <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
+         <CHAR name="pullUpDown" length="1"><VALUES>'u','d','n'</VALUES></CHAR>
+      </parameters>
+      <attributes> IN, SYSTEM, BASIC</attributes>
+         <checks>
+           <check pinDoesNotCollide="RPiGPIO" 
+		start="$start" width= "$width"/>
+           </checks>
+      <data>BIT($width)</data>
+   </dation>
+
+   <dation name="RPiDigitalOut">
+      <parameters>
+         <FIXED name="start" length="31">
+             <FIXEDRANGE>0,27</FIXEDRANGE>
+         </FIXED>
+         <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
+      </parameters>
+         <checks>
+           <check pinDoesNotCollide="RPiGPIO" 
+		start="$start" width= "$width"/>
+           </checks>
+      <attributes> OUT, SYSTEM, BASIC</attributes>
+      <data>BIT($width)</data>
+   </dation>
+
+   <configuration name="reservedGpios" autoInstanciate="1">
+     <checks>
+      <check pinDoesNotCollide="RPiGPIO" bitList="0,1,2,4,5,6,7"/>
+     </checks>
+   </configuration>
+
+</platform>
+\end{XMLCode}

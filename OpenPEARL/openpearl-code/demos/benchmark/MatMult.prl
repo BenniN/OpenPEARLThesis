@@ -1,0 +1,87 @@
+MODULE(MatMult);
+
+SYSTEM;
+
+ stdout: StdOut;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+tMatMult: TASK MAIN;
+   OPEN so;
+   CALL multFixed31;
+   CALL multFloat53;
+   CLOSE so;
+END;
+
+
+multFixed31: PROC;
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+   DCL sum FIXED(31);
+   DCL m1(100,100) FIXED(31);
+   DCL m2(100,100) FIXED(31);
+   DCL m3(100,100) FIXED(31);
+
+   FOR i TO 100 REPEAT
+     FOR j TO 100 REPEAT
+        m1(i,j) = i FIT sum +j; ! FIT required to avoid FixedOverflow
+        m2(j,i) = i FIT sum +j;
+     END;
+   END;
+
+
+   start := NOW;
+   FOR i TO 100 REPEAT
+      FOR j TO 100 REPEAT
+         sum := 0;
+         FOR k TO 100 REPEAT
+            sum := sum + m1(i,k)*m2(k,j);
+         END;
+         m3(i,j) = sum;
+      END;
+   END;
+   end := NOW;
+   executionTime := end - start;
+ 
+   PUT 'MatMult fixed 31 100x100 ', executionTime TO so
+   BY A(25),D(13,6), SKIP;
+END;
+
+multFloat53: PROC;
+   DCL (start,end) CLOCK;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+   DCL sum FLOAT(53);
+   DCL fixed15ForFit FIXED(15);
+   DCL m1(100,100) FLOAT(53);
+   DCL m2(100,100) FLOAT(53);
+   DCL m3(100,100) FLOAT(53);
+
+   FOR i TO 100 REPEAT
+     FOR j TO 100 REPEAT
+        m1(i,j) = i+j FIT fixed15ForFit ;
+        m2(j,i) = i+j FIT fixed15ForFit;
+     END;
+   END;
+
+
+   start := NOW;
+   FOR i TO 100 REPEAT
+      FOR j TO 100 REPEAT
+         sum := 0;
+         FOR k TO 100 REPEAT
+            sum := sum + m1(i,k)*m2(k,j);
+         END;
+         m3(i,j) = sum;
+      END;
+   END;
+   end := NOW;
+   executionTime := end - start;
+ 
+   PUT 'MatMult float53 100x100 ', executionTime TO so
+   BY A(25),D(13,6), SKIP;
+END;
+
+MODEND;
+

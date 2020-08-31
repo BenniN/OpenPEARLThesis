@@ -1,0 +1,13 @@
+   <dation name="PCan">
+      <parameters>
+          <CHAR length="32767" name="deviceName"><NotEmpty/></CHAR>
+          <FIXED length="31" name="speed">
+	     <VALUES>125000, 250000, 500000, 1000000</VALUES>
+          </FIXED>
+      </parameters>
+      <attributes> SYSTEM, BASIC, IN, OUT, INOUT</attributes>
+      <data>ALL</data>
+      <checks>
+        <check instances="oncePerSet" set="PCan($deviceName)"/>
+      </checks>
+   </dation>

@@ -1,0 +1,14 @@
+   <connection name="LogFile">
+      <parameters>
+         <CHAR length="32767" name="logFileName">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <needAssociation name="NamedAlphicOutProvider"/>
+      <checks>
+         <check instances="1"/>
+      </checks>
+   </connection>

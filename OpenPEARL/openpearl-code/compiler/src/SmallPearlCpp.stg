@@ -1,0 +1,2001 @@
+/*
+ [The "BSD license"]
+ Copyright (c) 2012-2020 Marcel Schaible
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+group smallpearl;
+
+/****************************************************************************/
+
+Prologue( src,
+          headerfiles,
+          namespaces,
+          useSystemElements,
+          taskSpecifierList,
+          ConstantPoolList,
+          StructureForwardDeclarationList,
+          StructureDeclarationList) ::= <<
+#include \<PearlIncludes.h>
+
+<if(useSystemElements)>
+namespace pearlrt {
+    extern int createSystemElements();
+}
+
+static int dummy = pearlrt::createSystemElements();
+<endif>
+
+const char* filename = (char*) "<src>";
+
+<if(headerfiles)> <headerfiles:headerfile(); separator="\n"> <endif>
+<if(namespaces)> <namespaces:using_namespace(); separator="\n"> <endif>
+
+<if(ConstantPoolList)>
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT POOL
+/////////////////////////////////////////////////////////////////////////////
+<ConstantPoolList>
+<endif>
+
+<if(taskSpecifierList)>
+/////////////////////////////////////////////////////////////////////////////
+// TASK SPECIFIERS
+/////////////////////////////////////////////////////////////////////////////
+<taskSpecifierList>
+<endif>
+
+<if(StructureForwardDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE FORWARD DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureForwardDeclarationList>
+<endif>
+
+<if(StructureDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureDeclarationList>
+<endif>
+
+>>
+
+/****************************************************************************/
+
+headerfile(filename,issystem) ::= <<
+<if(issystem)>
+#include \<<filename>\><\n>
+<else>
+#include "<filename>"<\n>
+<endif>
+>>
+
+/****************************************************************************/
+
+using_namespace(name) ::= <<
+using namespace <name>;<\n>
+>>
+
+/************************* MODULE *************************/
+
+module(src,name,prologue,SystemPart,ProblemPart,cpp_inlines) ::= <<
+<if(prologue)>
+/////////////////////////////////////////////////////////////////////////////
+// PROLOGUE
+/////////////////////////////////////////////////////////////////////////////
+<prologue>
+<endif>
+
+<if(cpp_inlines)>
+<cpp_inline(cpp_inlines)>
+<endif>
+
+<if(SystemPart)>
+/////////////////////////////////////////////////////////////////////////////
+// SYSTEM PART
+/////////////////////////////////////////////////////////////////////////////
+<SystemPart>
+<endif>
+
+<if(ProblemPart)>
+<ProblemPart>
+<endif>
+>>
+
+SystemPart(cpp_inlines) ::= <<
+<if(cpp_inlines)>
+<cpp_inline(cpp_inlines)>
+<endif>
+>>
+
+/*********************** TASKSPECIFIERS ***********************/
+
+TaskSpecifier(taskname) ::= <<
+<taskname: {task|SPCTASK(_<task>);}; separator="\n">
+>>
+
+/*********************** CONSTANT POOL ***********************/
+
+ConstantPoolList(constants) ::= <<
+<constants: {constant|<constant>}; separator="\n">
+>>
+
+ConstantPoolEntry(name,type,precision,value) ::= <<
+static /*const*/ pearlrt::<type>\<<precision>\>         <name>(<value>);
+>>
+
+ConstantPoolCharacterEntry(name,type,length,value) ::= <<
+static /*const*/ pearlrt::<type>\<<length>\>         <name>("<value>");
+>>
+
+ConstantPoolBitEntry(name,type,length,value) ::= <<
+static /*const*/ pearlrt::<type>\<<length>\>         <name>(<value>);
+>>
+
+ConstantPoolDurationEntry(name,type,valueSec, valueUsec,valueSign) ::= <<
+static /*const*/ pearlrt::<type>          <name>(<valueSec>,<valueUsec>,<valueSign>);
+>>
+
+ConstantPoolClockEntry(name,type,value) ::= <<
+static /*const*/ pearlrt::<type>          <name>(<value>);
+>>
+
+ConstantPoolNILReferenceEntry(name) ::= <<
+static /*const*/ pearlrt::Ref \< char>   <name>;
+>>
+
+/*********************** GLOBAL DECLARATIONS ***********************/
+
+globalDecl(decls) ::= <<
+    <decls: {decl|
+    <decl>;
+}>
+>>
+
+/*********************** PROBLEM PART ***********************/
+
+ProblemPart(ScalarVariableDeclarations,
+            SemaDeclarations,
+            BoltDeclarations,
+            semaphoreArrays,boltArrays,
+            ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,DationSpecifications,DationDeclarations,
+            StructVariableDeclarations,
+            ProcedureSpecifications,ProcedureDeclarations,
+            InterruptSpecifications) ::= <<
+/////////////////////////////////////////////////////////////////////////////
+// PROBLEM PART
+/////////////////////////////////////////////////////////////////////////////
+
+<if(InterruptSpecifications)>
+/////////////////////////////////////////////////////////////////////////////
+// INTERRUPT SPECIFICATIONS
+/////////////////////////////////////////////////////////////////////////////
+<InterruptSpecifications>
+<endif>
+
+<if(ProcedureSpecifications)>
+/////////////////////////////////////////////////////////////////////////////
+// PROCEDURE SPECIFICATIONS
+/////////////////////////////////////////////////////////////////////////////
+<ProcedureSpecifications>
+<endif>
+
+
+<if(DationSpecifications)>
+/////////////////////////////////////////////////////////////////////////////
+// DATION SPECIFICATIONS
+/////////////////////////////////////////////////////////////////////////////
+<DationSpecifications>
+<endif>
+
+<if(DationDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// DATION DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<DationDeclarations>
+<endif>
+
+<if(ScalarVariableDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// VARIABLE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<ScalarVariableDeclarations>
+<endif>
+
+<if(SemaDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// SEMAPHORE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<SemaDeclarations>
+<endif>
+
+<if(semaphoreArrays)>
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT SEMAPHORE ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+<semaphoreArrays>
+<endif>
+
+<if(BoltDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// BOLT DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<BoltDeclarations>
+<endif>
+
+<if(boltArrays)>
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT BOLT ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+<boltArrays>
+<endif>
+
+<if(ArrayDescriptors)>
+/////////////////////////////////////////////////////////////////////////////
+// ARRAY DESCRIPTORS
+/////////////////////////////////////////////////////////////////////////////
+<ArrayDescriptors>
+<endif>
+
+<if(ArrayVariableDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// ARRAY VARIABLES DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<ArrayVariableDeclarations>
+<endif>
+
+<if(StructVariableDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE VARIABLES DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructVariableDeclarations>
+<endif>
+
+<if(ProcedureDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// PROCEDURE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<ProcedureDeclarations>
+<endif>
+
+<if(TaskDeclarations)>
+/////////////////////////////////////////////////////////////////////////////
+// TASK DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<TaskDeclarations>
+<endif>
+>>
+
+
+/*********************** VARIABLE DECLARATION ***********************/
+
+variable_declaration(name,type,init,global,inv,no_decoration) ::= <%
+<if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>
+<if(init)>(<variable_init(init)>)<endif>
+<if(global)>  (GLOBAL)<endif>;
+%>
+
+variable(name) ::= <<
+<user_variable(name)>
+>>
+
+variable_init(value) ::= <<
+<value>
+>>
+
+/*********************** TYPE DEFINITION ***********************/
+
+type(simple_type,time_type) ::= <<
+<if(simple_type)><simple_type><elseif(time_type)><time_type><endif>
+>>
+
+simple_type(type_fixed, type_char, type_float) ::= <<
+<if(type_fixed)><type_fixed><elseif(type_char)><type_char><elseif(type_float)><type_float><endif>
+>>
+
+fixed_type(size) ::= <<
+pearlrt::Fixed\<<size>\>
+>>
+
+bit_type(size) ::= <<
+pearlrt::BitString\<<size>\>
+>>
+
+char_type(size) ::= <<
+pearlrt::Character\<<size>\>
+>>
+
+float_type(size) ::= <<
+pearlrt::Float\<<size>\>
+>>
+
+time_type(clock_type,duration_type) ::= <<
+<if(clock_type)><clock_type><elseif(duration_type)><duration_type><endif>
+>>
+
+clock_type(init) ::= <<
+pearlrt::Clock
+>>
+
+duration_type(init) ::= <<
+pearlrt::Duration
+>>
+
+TypeReferenceSimpleType(BaseType) ::= <<
+pearlrt::Ref \< <BaseType> > 
+>>
+
+array_specification_type(BaseType) ::= <<
+pearlrt::RefArray\< <BaseType> >
+>>
+
+task_type() ::= <%
+pearlrt::Task
+%>
+
+sema_type() ::= <%
+pearlrt::Semaphore
+%>
+
+bolt_type() ::= <%
+pearlrt::Bolt
+%>
+
+
+interrupt_type() ::= <%
+pearlrt::Interrupt*
+%>
+
+dation_type(isAlphic, isType, isBasic) ::= <%
+<if(isAlphic)>pearlrt::DationPG
+<else>
+  <if(isType)>pearlrt::DationRW
+  <else>
+    <if(isBasic)>pearlrt::DationTS
+    <endif>
+  <endif>
+<endif>
+%>
+
+
+/*********************** STATEMENTS ***********************/
+
+empty_statement() ::= <<
+    ;
+>>
+
+statements(statement) ::= <<
+<statement>
+>>
+
+task_declaration(name,priority,main,body,cpp) ::= <<
+DCLTASK(_<name>, (pearlrt::Prio( (pearlrt::Fixed\<15>)<priority>)), ((pearlrt::BitString\<1>)<main>)) {
+    <body>
+}
+<if(cpp)>
+<cpp_inline(cpp)>
+<endif>
+>>
+
+
+assignment_statement(lhs,rhs) ::= <%
+<lhs><if(rhs)> = <rhs><endif>;
+%>
+
+if_statement(rhs, then_block, else_block) ::= <<
+	if (<rhs>) {
+	    <then_block>
+	}
+	<if(else_block)>else {
+	    <else_block>
+	}<endif>
+>>
+
+
+
+task_body(decls,statements) ::= <<
+    <decls>
+    <statements>
+>>
+
+
+
+statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
+<if(srcFilename)>
+me->setLocation(<srcLine>, filename);
+<endif>
+<if(label)><label><endif>
+<if(tempVariableList)>{<tempVariableList><endif>
+<if(cpp)>
+<cpp_inline(cpp)>
+<endif>
+<if(code)><code><endif>
+<if(tempVariableList)>}<endif>
+>>
+
+
+
+label_statement(label) ::= <%
+	<user_label(label)>:<\n>
+%>
+
+goto_statement(label) ::= <<
+	goto <user_label(label)>;
+>>
+
+ExitStatement(label) ::= <<
+	<if(label)>
+	    goto <user_label(label)>;
+	<else>
+	    break;
+	<endif>
+>>
+
+return_statement(expression,char_size) ::= <<
+	<if(char_size)>
+	{ pearlrt::Character\< <char_size> > result;
+	  pearlrt::CharSlice(result).setSlice(<expression>);
+	  return result;
+	}
+	<else>
+	   <if(expression)>
+	   return (<expression>);
+	<else>
+	   return;
+	<endif>
+<endif>
+>>
+
+task_control_statement(code) ::= <<
+<code><\n>
+>>
+
+task_start(task,Condition,startCondition,priority,at,after,all,until,during,when) ::= <<
+    <task>.activate( me,
+	     <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
+	    /* prio   */  pearlrt::Prio(<priority>),
+	    /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
+	    /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
+	    /* all    */  <if(all)><all><else>pearlrt::Duration()<endif>,
+	    /* until  */  <if(until)><until><else>pearlrt::Clock()<endif>,
+	    /* during */  <if(during)><during><else>pearlrt::Duration()<endif>,
+	    /* when   */  <if(when)><when><else>0<endif>
+                   );
+>>
+
+task_terminate(task) ::= <%
+	<if(task)>
+		<task>.terminate(me);
+	<else>
+		me->terminate(me);
+	<endif>
+%>
+
+TaskResume(Condition,at,after,when) ::= <<
+    me->resume( <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
+          /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
+          /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
+	  /* when   */  <if(when)><when><else>0<endif>
+           );
+>>
+
+
+
+task_prevent(task) ::= <<
+	<if(task)>
+		<task>.prevent(me);
+	<else>
+		me->prevent(me);
+	<endif>
+>>
+
+task_suspend(task) ::= <<
+	<if(task)>
+		<task>.suspend(me);
+	<else>
+		me->suspend(me);
+	<endif>
+>>
+
+TaskContinuation(task,Condition,priority,at,after,when) ::= <<
+<if(task)>
+    <task>.cont( me,
+                  <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
+           /* prio   */  pearlrt::Prio(<priority>),
+           /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
+           /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
+	   /* when   */  <if(when)><when><else>0<endif>
+                );
+<else>
+        me->cont( me,
+            <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
+           /* prio   */  pearlrt::Prio(<priority>),
+           /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
+           /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
+	   /* when   */  <if(when)><when><else>0<endif>
+                );
+<endif>
+>>
+
+taskAddress(taskName) ::= <%
+<if(taskName)><taskName><else>me<endif>
+%>
+
+taskPrio(taskName) ::= <%
+<if(taskName)>(<taskName>.getPrio())<else>(me->getPrio())<endif>
+%>
+
+expression(code,id,bitstring,operator,functionCall) ::= <%
+<if(id)><id><elseif(code)><code; wrap><elseif(bitstring)><bitstring><endif>
+<if(operator)><operator><endif>
+<if(functionCall)><functionCall><endif>
+%>
+
+
+DivisionExpression(lhs,convert_to0,rhs,convert_to1) ::= <%
+(<if(convert_to0)>(pearlrt::Float\<<convert_to0>>)<endif>(<lhs>))
+/
+(<if(convert_to1)>(pearlrt::Float\<<convert_to1>>)<endif>(<rhs>))
+%>
+
+FixedDivisionExpression(lhs,rhs) ::= <%
+  <lhs>/<rhs>
+%>
+
+NotBitwiseExpression(rhs) ::= <%
+  <rhs>.bitNot()
+%>
+
+
+AndBitwiseExpression(lhs,rhs) ::= <%
+  <lhs>.bitAnd(<rhs>)
+%>
+
+
+OrBitwiseExpression(lhs,rhs) ::= <%
+  <lhs>.bitOr(<rhs>)
+%>
+
+ExorBitwiseExpression(lhs,rhs) ::= <%
+  <lhs>.bitXor(<rhs>)
+%>
+
+CshiftExpression(lhs,rhs) ::= <%
+  <lhs>.bitCshift(<rhs>)
+%>
+
+ShiftExpression(lhs,rhs) ::= <%
+  <lhs>.bitShift(<rhs>)
+%>
+
+BitCatExpression(op1,op2) ::= <%
+ <op1>.bitCat(<op2>)
+%>
+
+CharCatExpression(op1,op2) ::= <%
+  <op1>.catChar(<op2>)
+%>
+
+ReferenceExpression(code,id,bitstring,operator,functionCall) ::= <%
+	<if(id)>&<id><elseif(code)>&<code; wrap><elseif(bitstring)><bitstring><endif>
+	<if(operator)><operator><endif>
+	<if(functionCall)><functionCall><endif>
+%>
+
+
+FunctionCall(callee,ListOfActualParameters) ::= <%
+	<callee>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
+%>
+
+literal(integer,float,string,time,duration,bitstring,nil) ::= <%
+	<if(integer)><integer><endif>
+	<if(float)><float><endif>
+	<if(string)><string><endif>
+	<if(time)><time><endif>
+	<if(duration)><duration><endif>
+	<if(bitstring)><bitstring><endif>
+	<if(nil)><nil><endif>
+%>
+
+
+/************************* I/O STATEMENTS ************************/
+
+io_statement(code) ::= <<
+<code><\n>
+>>
+
+open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
+{
+    <if(declFileName)><declFileName><endif>
+    <id>.dationOpen(
+    <if(paramlist)>
+        <paramlist>
+    <else>
+        0
+    <endif>
+    <if(refFileName)>
+    <refFileName>
+    <else>
+    , (pearlrt::Character\<1>*) 0
+    <endif>
+    <if(rst_var)>
+    , &(<rst_var>)
+    <else>
+    , (pearlrt::Fixed\<31>*) 0
+    <endif>
+    );
+}
+>>
+
+declare_idf_filename(variable,stringConstant,lengthOfStringConstant) ::= <<
+<if(stringConstant)>
+   static pearlrt::Character\<<lengthOfStringConstant>\> idf_filename("<stringConstant>"); <\n>
+<endif>
+>>
+
+reference_idf_filename(variable,stringConstant) ::= <<
+    <if(stringConstant)>, &idf_filename<endif>
+    <if(variable)>, &<user_variable(variable)><endif>
+>>
+
+open_parameterlist(parameter) ::= <%
+<parameter: {p|<p>} ; separator=" | ">
+%>
+
+open_parameter_old(attribute) ::= <%
+    pearlrt::Dation::OLD
+%>
+
+open_parameter_new(attribute) ::= <%
+    pearlrt::Dation::NEW
+%>
+
+open_parameter_any(attribute) ::= <%
+    pearlrt::Dation::ANY
+%>
+
+open_close_parameter_rst(id) ::= <%
+    pearlrt::Dation::RST
+%>
+
+open_parameter_idf(id,string) ::= <%
+    pearlrt::Dation::IDF
+%>
+
+close_parameterlist(parameter) ::= <%
+<parameter: {p|<p>} ; separator=" | ">
+%>
+
+close_statement(id,paramlist,rst_var) ::= <<
+  <id>.dationClose(<paramlist>, <if(rst_var)>&(<rst_var>)<else>(pearlrt::Fixed\<15>*) 0<endif>);
+>>
+
+close_parameter_can(attribute) ::= <%
+pearlrt::Dation::CAN
+%>
+
+close_parameter_prm(attribute) ::= <%
+pearlrt::Dation::PRM
+%>
+
+close_parameter_rst(id) ::= <%
+pearlrt::Dation::RST
+%>
+
+close_parameter_none(id) ::= <%
+0
+%>
+
+
+/* ---------------------------------------------------------- */
+
+// generic template for READ/WRITE/TAKE/SEND/PUT/GET
+iojob_io_statement(dation,command,datalist,formatlist,format_list_is_static) ::= <<
+// <command> statement 
+{
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   <if(datalist)>
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=sizeof(dataEntries)/sizeof(dataEntries[0]),
+     .entry=dataEntries};
+   <else>pearlrt::IODataList dataList = {
+     .nbrOfEntries=0,
+     .entry=NULL};
+  <endif>
+  <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     <if(formatlist)>
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+     <else>.nbrOfEntries=0,
+     .entry=NULL};
+     <endif>
+
+  <dation>.<command>(me, &dataList , &formatList);
+}
+>>
+
+
+iojob_convertTo_statement(char_string,datalist,formatlist,format_list_is_static) ::= <<
+//CONVERT TO statement
+{
+  pearlrt::RefCharacter rc(<char_string>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, true);
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
+   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+
+   strDation.convertTo(me, &dataList , &formatList);
+}
+>>
+
+iojob_convertFrom_statement(char_string,datalist,formatlist,format_list_is_static) ::= <<
+//CONVERT FROM statement
+{
+  pearlrt::RefCharacter rc(<char_string>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, false);
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
+   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+
+   strDation.convertFrom(me, &dataList , &formatList);
+}
+>>
+
+
+iojob_datalist(dataelement, data_variable, expression, data_index) ::= <<
+<data_variable: {v|<v>} ; separator="\n">
+
+pearlrt::IODataEntry dataEntries[]  = {
+  <dataelement: {e|<e>} ; separator=",\n">
+};
+>>
+
+/*
+variable is the address of the data storage
+type     is the type of the data
+nbr_of_elements is the number of (array-)elements to be transmitted
+lbw,upb   defines a variable character selection limits .CHAR(lwb,upb)
+*/
+iojob_data_item(variable,type,size,nbr_of_elements,lwb,upb) ::= <<
+{
+   .dataType={pearlrt::IODataEntry::<type>,<size>},
+   .dataPtr={.outData=&<variable>},
+   <if(lwb)>
+   .param1={.numberOfElements = <nbr_of_elements>},
+   .param2={.charSliceLimits={<lwb>,<upb>}}
+   <else>
+   .param1={.numberOfElements = <nbr_of_elements>}
+   <endif>
+}
+>>
+
+
+iojob_formatlist(format_variable,formats) ::= <<
+pearlrt::IOFormatEntry formatEntries[]  = {
+  <formats: {e|<e>} ; separator=",\n">
+};
+>>
+
+iojob_rst(element,size) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::RST,
+   .fp1={.fxxPtr={.voidPtr=&<element>,.size=<size>}}
+}
+>>
+
+iojob_position_col(element,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::COL,
+   .fp1={.f31=<element>}
+}
+>>
+
+iojob_position_line(element,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::LINE,
+   .fp1={.f31=<element>}
+}
+>>
+
+iojob_position_pos(expression1,expression2,expression3,direction,dimensions) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::POS<dimensions>,
+   <if(expression1)>.fp1={.f31=<expression1>}<endif>
+   <if(expression2)>.fp2={.f31=<expression2>}<endif>
+   <if(expression3)>.fp3={.f31=<expression3>}<endif>
+}
+>>
+
+iojob_position_sop(expression1,size1, expression2,size2, expression3,size3, direction,dimensions) ::= <%
+{
+   .format=pearlrt::IOFormatEntry::SOP<dimensions>,
+   <if(expression1)>
+      .fp1={.fpxxPtr={.voidPtr=&<expression1>}}
+      .fp1={.fpxxPtr={.size=&<size1>}}
+   <endif>
+   <if(expression2)>
+      .fp2={.fpxxPtr={.voidPtr=&<expression2>}}
+      .fp2={.fpxxPtr={.size=&<size2>}}
+   <endif>
+   <if(expression3)>
+      .fp3={.fpxxPtr={.voidPtr=&<expression3>}}
+      .fp3={.fpxxPtr={.size=&<size3>}}
+   <endif>
+}
+%>
+
+iojob_position_x(element,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::X,
+   <if(element)>.fp1={.f31=<element>}
+   <else>.fp1={.f31=CONST_FIXED_P_1_31}
+   <endif>
+}
+>>
+
+iojob_position_skip(element,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::SKIP,
+   <if(element)>.fp1={.f31=<element>}
+   <else>.fp1={.f31=CONST_FIXED_P_1_31}
+   <endif>
+}
+>>
+
+iojob_position_page(element,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::PAGE,
+   <if(element)>.fp1={.f31=<element>}
+   <else>.fp1={.f31=CONST_FIXED_P_1_31}
+   <endif>
+}
+>>
+
+iojob_position_adv(expression1,expression2,expression3,direction,dimensions) ::= <%
+{
+   .format=pearlrt::IOFormatEntry::ADV<dimensions>,
+   <if(expression1)>.fp1={.fp31=<expression1>}<endif>
+   <if(expression2)>.fp2={.fp31=<expression2>}<endif>
+   <if(expression3)>.fp3={.fp31=<expression3>}<endif>
+}
+%>
+
+
+iojob_format_loopstart(elements,repetitions) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::LoopStart,
+   .fp1={.intValue=<elements>},
+   .fp2={.f31=<repetitions>}
+}
+>>
+
+iojob_list_format() ::= <<
+{
+   .format=pearlrt::IOFormatEntry::LIST,
+}
+>>
+
+iojob_fixed_format(element,fieldwidth,decimalPositions,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::F,
+   .fp1={.f31=<fieldwidth>},
+   <if(decimalPositions)>
+   .fp2={.f31=<decimalPositions>}
+   <else>
+   .fp2={.f31=0}
+   <endif>
+}
+>>
+
+iojob_e_format(element,fieldwidth,decimalPositions,significance,exp23,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::E<exp23>,
+   <if(significance)>
+   .fp1={.f31=<fieldwidth>},
+   .fp2={.f31=<decimalPositions>},
+   .fp3={.f31=<significance>}
+   <else><if(decimalPositions)>
+   .fp1={.f31=<fieldwidth>},
+   .fp2={.f31=<decimalPositions>},
+   .fp3={.f31=(<decimalPositions>)+CONST_FIXED_P_1_31}
+        <else>
+   .fp1={.f31=<fieldwidth>},
+   .fp2={.f31=0},
+   .fp3={.f31=1}
+   <endif>
+   <endif>
+}
+>>
+
+
+iojob_character_string_format(element,fieldwidth,direction) ::= <<
+{
+   <if(fieldwidth)>
+   .format=pearlrt::IOFormatEntry::Aw,
+   .fp1={.f31=<fieldwidth>}
+   <else>
+   .format=pearlrt::IOFormatEntry::A
+   <endif>
+}
+>>
+
+iojob_bit_format(element,base,fieldwidth,direction) ::= <<
+{
+   <if(fieldwidth)>
+   .format=pearlrt::IOFormatEntry::B<base>w,
+   .fp1={.f31=<fieldwidth>}
+   <else>
+   .format=pearlrt::IOFormatEntry::B<base>
+   <endif>
+}
+>>
+
+iojob_time_format(element,fieldwidth,decimalPositions,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::T,
+   .fp1={.f31=<fieldwidth>},
+   <if(decimalPositions)>
+   .fp2={.f31=<decimalPositions>}
+   <else>
+   .fp2={.f31=0}
+   <endif>
+}
+>>
+
+iojob_duration_format(element,fieldwidth,decimalPositions,direction) ::= <<
+{
+   .format=pearlrt::IOFormatEntry::D,
+   .fp1={.f31=<fieldwidth>},
+   <if(decimalPositions)>
+   .fp2={.f31=<decimalPositions>}
+   <else>  
+   .fp2={.f31=0}
+   <endif> 
+}
+>>
+
+
+/******************************** CALL Statement *********************************/
+
+CallStatement(callee, ListOfActualParameters) ::= <<
+<user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
+>>
+
+
+ListOfActualParameters(ActualParameters) ::= <%
+<ActualParameters: {param|<param>} ; separator=", ">
+%>
+
+
+ActualParameters(ActualParameter) ::= <%
+<ActualParameter: {param|<param>} ; separator=", ">
+%>
+
+TempCharVariable(char_size,variable,expr) ::= <<
+pearlrt::Character\< <char_size> > <variable>;
+pearlrt::CharSlice(<variable>).setSlice(<expr>);
+>>
+
+TempVariableList(variable) ::= <<	
+<variable: {v|<v>} ; separator="\n">	 	
+>>
+
+/******************************** CPP INLINING *********************************/
+
+cpp_inline(body) ::= <<
+<if(body)><body:cpp_line(); separator="\n">
+<endif>
+>>
+
+cpp_line(line) ::= <<
+<line>
+>>
+
+/************************* SET LOCATION OF A STATEMENT *************************/
+
+setLocation(src, lineno) ::= <%
+me->setLocation(<lineno>, "<src>");
+%>
+
+/*******************************************************************************/
+
+
+ScalarVariableDeclaration(variable_denotations,cpp) ::= <<
+<variable_denotations>
+<if(cpp)><cpp_inline(cpp)><endif>
+>>
+
+variable_denotation(decl) ::= <%
+<decl>
+%>
+
+VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
+<if(inv)>const  <endif><TypeAttribute>  <variable(name)><if(InitElement)>(<InitElement>)<endif><if(global)>  (GLOBAL)<endif>; <\n>
+%>
+
+
+
+GlobalAttribute() ::= <<
+*** GlobalAttribute ***
+>>
+
+TypeAttribute(Type) ::= <<
+<Type>
+>>
+
+SimpleType(TypeInteger,TypeFloatingPointNumber,TypeBitString,TypeDuration,TypeSemaphore,TypeBolt,TypeTime,TypeCharacterString) ::= <%
+<if(TypeInteger)><TypeInteger><endif>
+<if(TypeFloatingPointNumber)><TypeFloatingPointNumber><endif>
+<if(TypeDuration)><TypeDuration><endif>
+<if(TypeBitString)><TypeBitString><endif>
+<if(TypeTime)><TypeTime><endif>
+<if(TypeSemaphore)><TypeSemaphore><endif>
+<if(TypeBolt)><TypeBolt><endif>
+<if(TypeCharacterString)><TypeCharacterString><endif>
+%>
+
+TypeReferenceTaskType() ::= <<
+pearlrt::Task *
+>>
+
+TypeInteger(size) ::= "pearlrt::Fixed\<<size>>"
+
+TypeCharacterString(size) ::= "pearlrt::Character\<<size>>"
+
+TypeFloatingPointNumber(precision) ::= "pearlrt::Float\<<precision>>"
+
+TypeDuration(code) ::= <<
+pearlrt::Duration
+>>
+
+
+
+TypeBitString(length) ::= <<
+pearlrt::BitString\<<length>\>
+>>
+
+Constant(IntegerConstant,TimeConstant,DurationConstant,FloatingPointConstant,StringConstant,BitStringConstant) ::=  <%
+<if(IntegerConstant)><IntegerConstant><endif>
+<if(TimeConstant)><TimeConstant><endif>
+<if(DurationConstant)><DurationConstant><endif>
+<if(FloatingPointConstant)><FloatingPointConstant><endif>
+<if(StringConstant)>"<StringConstant>"<endif>
+<if(BitStringConstant)><BitStringConstant><endif>
+%>
+
+IntegerConstant(value) ::= <<
+<value>
+>>
+
+BitStringConstant(value,length) ::= <<
+pearlrt::BitString\<<length>\>(<value>)
+>>
+
+TimeConstant(value) ::= <<
+<value>
+>>
+
+DurationConstant(value) ::= <<
+<value>
+>>
+
+FloatingPointConstant(value) ::= <<
+((pearlrt::Float<53>)<value>)
+>>
+
+StringConstant(value) ::= <<
+<value>
+>>
+
+BitConstant(value) ::= <<
+<value>
+>>
+
+
+TaskCoordinationStatement(statement) ::= <<
+<statement>
+>>
+
+/* --------------------- SEMAPHORE -------------------------- */
+sema_declaration(name,global,preset) ::= <<
+DCLSEMA(_<name>,<if(preset)><preset><else>0<endif>);
+
+>>
+
+SemaDeclaration(decl) ::= <%
+<decl>
+%>
+
+SemaTry(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+  pearlrt::Semaphore::dotry( me, <nbrOfElements>, <localArrayname>)
+<else>
+  pearlrt::Semaphore::dotry( me, <nbrOfElements>, semas<names: {name|_<name>}>)
+<endif>    
+>>
+
+
+SemaRequest(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Semaphore::request( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Semaphore::request( me, <nbrOfElements>, semas<names: {name|_<name>}>);
+<endif>    
+>>
+
+
+SemaRelease(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+  pearlrt::Semaphore::release( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Semaphore::release( me, <nbrOfElements>, semas<names: {name|_<name>}>);
+<endif>    
+>>
+
+
+/* --------------------- BOLT -------------------------- */
+
+bolt_declaration(name,global) ::= <<
+DCLBOLT(_<name>);
+
+>>
+
+BoltDeclaration(decl) ::= <%
+<decl>
+%>
+
+BoltReserve(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::reserve( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::reserve( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
+
+BoltFree(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::free( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::free( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
+
+BoltEnter(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::enter( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::enter( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
+
+BoltLeave(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::leave( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::leave( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
+
+/* --------------------- Arithmetic Operators -------------------------- */
+
+MonadiciArithmeticOperator(operator,operand) ::= <%
+    pearlrt::Float(<operand>).<operator>()
+%>
+
+
+ATAN(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).atan())
+%>
+
+COS(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).cos())
+%>
+
+EXP(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).exp())
+%>
+
+LN(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).ln())
+%>
+
+SIN(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).sin())
+%>
+
+SQRT(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).sqrt())
+%>
+
+TAN(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).tan())
+%>
+
+TANH(operand,convert_to) ::= <%
+((<if (convert_to)>(pearlrt::Float\<<convert_to>>)<endif>(<operand>)).tanh())
+%>
+
+/* --------------------- Relational Operators -------------------------- */
+EQ(lhs,rhs) ::= <%
+(<lhs> == <rhs>)
+%>
+
+NE(lhs,rhs) ::= <%
+(<lhs> != <rhs>)
+%>
+
+LT(lhs,rhs) ::= <%
+(<lhs> \< <rhs>)
+%>
+
+LE(lhs,rhs) ::= <%
+(<lhs> \<= <rhs>)
+%>
+
+GT(lhs,rhs) ::= <%
+(<lhs> > <rhs>)
+%>
+
+GE(lhs,rhs) ::= <%
+(<lhs> >= <rhs>)
+%>
+
+/* --------------------------------------------------------------------- */
+
+FIT(lhs,rhs) ::= <%
+<lhs>.fit(<rhs>)
+%>
+
+Exponentiation(lhs,rhs) ::= <%
+<lhs>.pow(<rhs>)
+%>
+
+POW(lhs,rhs) ::= <%
+<lhs>.pow(<rhs>)
+%>
+
+ABS(operand) ::= <%
+<operand>.abs()
+%>
+
+SIGN(operand) ::= <%
+<operand>.sign()
+%>
+
+SIZEOF(operand) ::= <%
+((pearlrt::Fixed\<31>)(sizeof(<operand>)))
+%>
+
+REM(lhs,rhs) ::= <%
+    <lhs> % <rhs>
+%>
+
+ENTIER(operand) ::= <%
+(<operand>).entier()
+%>
+
+ROUND(operand) ::= <%
+(<operand>).round()
+%>
+
+NOW() ::= <%
+pearlrt::Clock::now()
+%>
+
+DATE() ::= <%
+pearlrt::Clock::date()
+%>
+
+BITSTOFIXED(operand) ::= <%
+<operand>.toFixed()
+%>
+
+CHARACTERSTOFIXED(operand) ::= <%
+(<operand>).toFixed()
+%>
+
+FIXEDTOCHARACTER(operand) ::= <%
+pearlrt::toChar(<operand>)
+%>
+
+
+
+referenceOf(obj) ::= <%
+&(<obj>)
+%>
+
+/* ---------------------  Semaphore Arrays -------------------------- */
+/* Semaphore arrays may be static for the module - or must be created locally to
+  the semaphore operation if variable array indices or references are used */
+
+SemaphoreArrays(array) ::= <<
+<array: {temp|<temp>}>
+>>
+
+SemaphoreArray(element,nameOfArray,isConstant) ::= <%
+<if(isConstant)>static <endif>pearlrt::Semaphore *
+    <if(isConstant)>semas<endif><nameOfArray>[] = {<element: {e|&<e>} ; separator=",">}; <\n>
+   
+%>
+
+/* --------------------- Bolt Arrays -------------------------- */
+
+BoltArrays(array) ::= <<
+<array: {temp|<temp>}>
+>>
+
+
+BoltArray(element,nameOfArray,isConstant) ::= <%
+<if(isConstant)>static <endif>pearlrt::Bolt *
+    <if(isConstant)>bolts<endif><nameOfArray>[] = {<element: {e|&<e>} ; separator=",">}; <\n>
+%>
+
+/* --------------------- DATION -------------------------- */
+
+DationSpecifications(decl) ::= <<
+<decl>
+>>
+
+DationSpecification(name,SpecifyTypeDation) ::= <<
+extern pearlrt::Device *d_<name>;
+<SpecifyTypeDation>
+>>
+
+
+SpecificationSystemDationB(name,TypeDation,global) ::= <<
+extern pearlrt::Device *d_<name>;
+static pearlrt::SystemDationB* <user_variable(name)> = static_cast\<pearlrt::SystemDationB*>(d_<name>); <\n>
+
+>>
+
+
+SpecificationSystemDationNB(name,TypeDation,global) ::= <<
+extern pearlrt::Device *d_<name>;
+static pearlrt::SystemDationNB* <user_variable(name)> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
+
+>>
+
+
+SpecificationSystemDationPG(name,TypeDation,global) ::= <<
+extern pearlrt::DationPG <user_variable(name)>;
+
+>>
+
+SpecificationSystemDationTS(name,TypeDation,global) ::= <<
+extern pearlrt::DationTS <user_variable(name)>;
+
+>>
+
+SpecificationSystemDationRW(name,TypeDation,global) ::= <<
+extern pearlrt::DationRW <user_variable(name)>;
+
+>>
+
+
+
+DationDeclarations(decl) ::= <<
+<decl>
+>>
+
+DationDeclaration(name,Dation,TypeDation,Id,Typology, tfu) ::= <<
+<if(Typology)><Typology><endif>
+<if(tfu)>static pearlrt::TFURecord\<<tfu>\>  tfu_<name>;<endif>
+pearlrt::<Dation> _<name>(_<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
+<\n>
+>>
+
+Typology(name,DIM1,DIM1Unlimited,DIM2,DIM3) ::= <%
+<if(DIM1 && DIM2 && DIM3)>
+<if(DIM1Unlimited)>
+static pearlrt::DationDim3 h_dim_<name>(<DIM2>,<DIM3>); 
+<else>
+static pearlrt::DationDim3 h_dim_<name>(<DIM1>,<DIM2>,<DIM3>); 
+<endif>
+<else>
+<if(DIM1 && DIM2)>
+<if(DIM1Unlimited)>
+static pearlrt::DationDim2 h_dim_<name>(<DIM2>); 
+<else>
+static pearlrt::DationDim2 h_dim_<name>(<DIM1>,<DIM2>);
+<endif>
+<else>
+<if(DIM1)>
+<if(DIM1Unlimited)>
+static pearlrt::DationDim1 h_dim_<name>;
+<else>
+static pearlrt::DationDim1 h_dim_<name>(<DIM1>); 
+<endif>
+<endif>
+<endif>
+<endif>
+
+%>
+
+TypeDation(SourceSinkAttribute,SystemDation,ClassAttribute,AccessAttribute,Dim,StepSize) ::= <<
+<SourceSinkAttribute> <if(AccessAttribute)> | <AccessAttribute><endif><if(Dim)>, &h_dim_<Dim><endif><ClassAttribute>
+>>
+
+ClassAttribute(alphic,basic,attribute) ::= <%
+<if(alphic)>
+<endif>
+
+<if(basic)>
+<endif>
+
+<if(attribute)>
+,<attribute>
+<endif>
+%>
+
+SourceSinkAttribute(attribute) ::= <%
+pearlrt::Dation::<attribute>
+%>
+
+AccessAttribute(attribute) ::= <%
+<attribute: {attr|pearlrt::Dation::<attr>} ; separator=" | ">
+%>
+
+TypeOfTransmissionData(all,type,size) ::= <%
+<if(all)>1<endif>
+<if(type)>sizeof(<type>)<endif>
+%>
+
+block_statement(code,id) ::= <<
+// BLOCK BEGIN
+{
+<code>
+}
+// BLOCK END <if(id)>Block-ID:<id><endif>
+>>
+
+
+user_procedure(name) ::= <%
+    _<name>
+%>
+
+
+user_variable(name) ::= <%
+    _<name>
+%>
+
+
+user_label(name) ::= <%
+    _<name>
+%>
+
+user_argument(name) ::= <%
+    _<name>
+%>
+
+
+
+/* --------------------- LOOPS -------------------------- */
+// all control elements have the same precision to avoid type conversions during loop execution  
+LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoopPass,while_cond,body,label_end) ::= <<
+{
+    <if(from)>
+    pearlrt::Fixed\<<precision>\> a_value;
+    a_value = <from>;
+    <else>
+    <if(GenerateLoopCounter)>
+    pearlrt::Fixed\<<precision>\> a_value(CONST_FIXED_P_1_<precision>);
+    <endif>
+    <endif>
+
+    <if(to)>
+    pearlrt::Fixed\<<precision>\> e_value;
+    e_value = <to>;
+    <endif>
+
+    <if(by)>
+    pearlrt::Fixed\<<precision>\> s_value;
+    s_value = <by>;
+    <else>
+    <if(GenerateLoopCounter)>
+    pearlrt::Fixed\<<precision>\> s_value(CONST_FIXED_P_1_<precision>);
+    <endif>
+    <endif>
+
+    <if(variable)>
+    pearlrt::Fixed\<<precision>\> <user_variable(variable)>;
+    <user_variable(variable)> = a_value;
+    <endif>
+
+    <if(to)>
+        while ((((s_value > CONST_FIXED_P_0_<precision>).getBoolean()) &&
+                ((a_value \<= e_value).getBoolean())) ||
+                (((s_value \< CONST_FIXED_P_0_<precision>).getBoolean()) &&
+                ((a_value >= e_value).getBoolean())))
+        {<\n>
+            <if(variable)>
+            <user_variable(variable)> = a_value;
+            <endif>
+
+            <if(while_cond)>
+            if (!(<while_cond>))
+                break;
+            <endif>
+
+            <if (body)> 
+               <body>
+            <else>
+                /* empty body needs a set_location as a memory barriers */
+                me->setLocation(<srcLine>, filename);
+            <endif>
+
+            me->setLocation(<srcLine>, filename);
+
+            try {
+                a_value = a_value + s_value;
+            }
+            catch(pearlrt::FixedRangeSignal &ex) {
+                break;
+            }
+        }
+    <else>
+        while ( 1 )
+        {<\n>
+            <if(variable)>
+            pearlrt::Fixed\<<precision>\> <user_variable(variable)>;
+            <user_variable(variable)> = a_value;
+            <endif>
+
+            <if(while_cond)>
+            if (!(<while_cond>))
+                break;
+            <endif>
+
+            <if (body)> 
+               <body>
+            <else>
+               /* empty body needs a set_location as a memory barriers */
+               me->setLocation(<srcLine>, filename);
+            <endif>
+
+            <if(countLoopPass)>
+            try {
+                a_value = a_value + s_value;
+            }
+            catch(pearlrt::FixedRangeSignal &ex) {
+                break;
+            }
+            <endif>
+        }
+    <endif>
+
+    <if(label_end)>
+        <user_label(label_end)>: ;
+    <endif>
+}
+>>
+
+/* --------------------- PROCEDURES -------------------------- */
+
+TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
+<if(resultAttribute)><resultAttribute><else>void<endif> 
+(pearlrt::Task* me<if(listOfFormalParameters)>, <listOfFormalParameters><endif> )
+%>
+
+
+ProcedureSpecification(id,listOfFormalParameters,body,resultAttribute,globalAttribute) ::= <<
+<if(resultAttribute)><resultAttribute><else>void<endif>
+<user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>);
+
+>>
+
+ProcedureDeclaration(id,listOfFormalParameters,body,resultAttribute,globalAttribute) ::= <<
+<if(resultAttribute)><resultAttribute><else>void<endif>
+<user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>)
+{
+    <body>
+}
+
+>>
+
+ProcedureBody(declarations,statements) ::= <<
+<declarations>
+<statements>
+>>
+
+ResultAttribute(type) ::= <%
+    <type>
+%>
+
+ListOfFormalParameters(FormalParameters) ::= <%
+<FormalParameters: {param|<param>} ; separator=", ">
+%>
+
+FormalParameters(FormalParameter) ::= <%
+<FormalParameter: {param|<param>} ; separator=", ">
+%>
+
+FormalParameter(id,type,assignmentProtection,passIdentical,isArray,isArrayDescriptor) ::= <%
+<if(isArrayDescriptor)>pearlrt::Array* ad<user_argument(id)>, <endif>
+<if(isArray)>
+  <if(assignmentProtection)>const <endif><type>  * data<user_argument(id)>
+<else>
+   <if(assignmentProtection)>const <endif><type>  <if(passIdentical)>&<endif> <user_argument(id)>
+<endif>
+
+%>
+
+ParameterType(type) ::= <%
+<type>
+%>
+
+/* --------------------- CASE STATEMENT ------------------------- */
+CaseStatement(casestatement1,casestatement2) ::= <<
+<casestatement1>
+<casestatement2>
+>>
+
+CaseStatement1(expression,alternatives,out) ::= <<
+switch ((<expression>).get()) {
+    <alternatives>
+    <out>
+}
+>>
+
+CaseStatement2(expression,alternatives,out) ::= <<
+switch ((<expression>).get()) {
+    <alternatives>
+    <out>
+}
+>>
+
+CaseAlternatives(Alternatives) ::= <%
+<Alternatives: {alt|<alt>}>
+%>
+
+CaseAlternative(alt, statements) ::= <<
+case <alt>: {
+    <statements>
+    break;
+} // end case <alt><\n>
+>>
+
+CaseIndexList(indices) ::= <%
+    <indices>
+%>
+
+CaseAlternative2(alts, statements) ::= <<
+<alts: {alt|<alt>}>{
+    <statements>
+    break;
+} // end case<\n>
+>>
+
+CaseRange(from, to) ::= <%
+    case <from> ... <to> :<\n>
+%>
+
+CaseIndex(index) ::= <%
+    case <index> :<\n>
+%>
+
+CaseOut(statements) ::= <%
+    default: {<\n>
+        <statements>
+        break;<\n>
+    } // end default<\n>
+%>
+
+ConstantCharacterValue(name) ::= <%
+    <name>
+%>
+
+CastBitToBoolean(name) ::= <%
+    <name>.getBoolean()
+%>
+
+TOBIT(noOfBits,operand) ::= <%
+    pearlrt::BitString\<<noOfBits>>(<operand>)
+%>
+
+TOFLOAT(precision,operand) ::= <%
+(pearlrt::Float\<<precision>>(<operand>))
+%>
+
+CONT(operand) ::= <%
+(*(<operand>))
+%>
+
+/* --------------------------- ARRAYS -------------------------------------------*/
+
+ArrayVariableDeclarations(declarations) ::= <<
+<declarations: {declaration|<declaration>}>
+>>
+
+ArrayVariableDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
+<type> data_<name>[<totalNoOfElements>]<if(initElements)> = <initElements><endif>;<\n>
+%>
+
+ArrayDescriptors(descriptors) ::= <<
+<descriptors: {descriptor|<descriptor>}; separator="\n">
+>>
+
+ArrayDescriptor(name,dimensions,limits) ::= <%
+DCLARRAY(<name>, <dimensions>, <limits>);
+%>
+
+ArrayDimensions(dimensions) ::= <%
+<dimensions: {dimension|<dimension>} ; separator=",">
+%>
+
+ArrayDimension(lowerBoundary,upperBoundary) ::= <%
+<lowerBoundary>,<upperBoundary>
+%>
+
+ArrayLimits(limits) ::= <%
+LIMITS({<limits: {limit|<limit>} ; separator=",">})
+%>
+
+ArrayLimit(lowerBoundary,upperBoundary,noOfElemenstOnNextSubArray) ::= <%
+{<lowerBoundary>,<upperBoundary>,<noOfElemenstOnNextSubArray>}
+%>
+
+ArrayLHS(name,descriptor,indices) ::= <%
+(*(data_<name> + <descriptor>->offset(<indices>)))
+%>
+
+ArrayIndices(indices) ::= <<
+    <indices: {index|<index>} ; separator=",\n">
+>>
+
+ArrayIndex(index) ::= <<
+    pearlrt::Fixed\<31>(<index>)
+>>
+
+
+ArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
+%>
+
+ArrayLWB(descriptor,index) ::= <%
+<descriptor>->lwb(<index>)
+%>
+
+ArrayUPB(descriptor,index) ::= <%
+<descriptor>->upb(<index>)
+%>
+
+/* --------------------------- CONVERT STATEMENT -------------------------------------------*/
+
+
+/* ---------------------------------------------------------- */
+ConvertToStatement(id, elements) ::= <<
+// CONVERT STATEMENT BEGIN
+{
+  pearlrt::RefCharacter rc(<id>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, true);
+
+  {
+   try {
+    <elements: {e|strDation<e>} ; separator="\n">
+   } catch(pearlrt::TerminateRequestSignal  &s) {
+     me->terminate(me);
+   } catch(pearlrt::Signal &s) {
+     if (! strDation.updateRst(&s)) {
+         throw;
+     }
+   }
+  }
+}
+// CONVERT STATEMENT END
+>>
+
+
+ConvertFromStatement(id, elements) ::= <<
+// CONVERT STATEMENT BEGIN
+{
+  pearlrt::RefCharacter rc(<id>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, false);
+
+  {
+   try {
+    <elements: {e|strDation<e>} ; separator="\n">
+   } catch(pearlrt::TerminateRequestSignal  &s) {
+     me->terminate(me);
+   } catch(pearlrt::Signal &s) {
+     if (! strDation.updateRst(&s)) {
+         throw;
+     }
+   }
+  }
+}
+// CONVERT STATEMENT END
+>>
+
+
+
+/* --------------------------- STRING SLICE -------------------------------------------*/
+
+// conversion from char selection to type Character if the length in known
+// note: rename in progress: Compiler use StringSelection; runtime use CharSlice / BitSlice
+MakeCharacterFromStringSelection(lwb,upb,id,size,offset) ::= <%
+    *(pearlrt::CharSlice(<id>)
+    	.getSlice(<lwb>,<upb><if(offset)>+(pearlrt::Fixed\<15>)<offset><endif>)
+    		.mkCharPtr((pearlrt::Character\<<size>>*)0))
+%>
+
+// rhs variable char selection in assignment or comparison
+GetCharSelection(lwb,upb,offset) ::= <%
+	.getSlice(<lwb>,<upb><if(offset)>+(pearlrt::Fixed\<15>)<offset><endif>)
+%>
+
+
+SetCharSelection(expr) ::= <%
+	.setSlice(<expr>)
+%>
+
+AssignCharSelection2Char(id,expr) ::= <%
+	pearlrt::CharSlice(<id>).setSlice(<expr>);
+%>
+
+// variable character string e.g. in compare
+RhsCharSelection(id,lwb,upb,offset) ::= <%
+pearlrt::CharSlice(<id>).getSlice(<lwb>,<upb><if(offset)>+pearlrt::Fixed\<15>(<offset>)<endif>)
+%>
+
+Assign2CharSelection(id,lhs) ::= <%
+	pearlrt::CharSlice(<id>)<lhs>;
+%>
+
+
+/* --------------------------- BIT SLICE -------------------------------------------*/
+
+// used for x.BIT(..) on rhs
+MakeBitString1FromStringSelection(id,lwb) ::= <%
+<id>.getBit(<lwb>)
+%>
+
+MakeBitStringNFromStringSelection(id,lwb,size) ::= <%
+<id>.getSlice(<lwb>,(pearlrt::BitString\< <size> >*) 0)
+%>
+
+AssignmentStatementBitSlice(id,lwb,upb,rhs) ::= <%
+<id>.setSlice(<lwb>,<upb>,<rhs>);
+%>
+
+
+/* --------------------------- INTERRUPTS -------------------------------------------*/
+
+InterruptSpecifications(specs) ::= <%
+<specs: {spec|<spec>}>
+%>
+
+InterruptSpecification(id) ::= <%
+extern pearlrt::Interrupt *<user_variable(id)>;<\n>
+%>
+
+EnableStatement(id) ::= <%
+  <id>->enable();
+%>
+
+DisableStatement(id) ::= <%
+  <id>->disable();
+%>
+
+TriggerStatement(id) ::= <%
+  <id>->trigger();
+%>
+
+/* --------------------------- STRUCTURE -------------------------------------------*/
+/* unused template
+StructVariableDeclarations(decl) ::= <%
+    StructVariableDeclarations: <decl>
+%>
+*/
+
+StructureDefinition(name,components) ::= <%
+struct <name> {<\n>
+    <components: {component|<component>}>
+};<\n>
+%>
+
+StructureVariableDeclaration(name,type) ::= <%
+<type>  <user_variable(name)>;<\n>
+%>
+
+StructComponentDeclaration(name,TypeAttribute) ::= <<
+   <TypeAttribute> <name>;<\n>
+>>
+
+StructureForwardDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
+>>
+
+StructureForwardDeclaration(name) ::= <<
+struct <name>;
+>>
+
+StructureArrayComponentDeclaration(name,type,assignmentProtection,totalNoOfElements) ::= <%
+<type> data_<name>[<totalNoOfElements>]
+%>
+
+
+StructureDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
+>>
+
+/* unused template
+StructureDeclaration(name) ::= <<
+struct <name>;
+>>
+*/
+StructureFormalParameter(type) ::= <%
+<type>
+%>
+
+StructureType(type) ::= <%
+<type>
+%>
+
+
+StructureComponent(component) ::= <%
+.<component>
+%>
+
+/* explode a name definition: */
+Name(id, name) ::= <%
+<user_variable(id)><if(name)>.<endif><name: {name|<name>}; separator=".">
+%>
+
+// for variable definition 
+TypeReferenceArray(basetype) ::= <%
+pearlrt::RefArray\< <basetype> >
+%>
+
+// for assignment
+arrayReference(basetype,descriptor,data) ::= <%
+pearlrt::RefArray\< <basetype> > (<descriptor>, <data>)
+%>
+
+// for read/write access
+RefArrayReadWrite(name,indices) ::= <%
+(*( <user_variable(name)>.getArrayData() +  <user_variable(name)>.getArrayDescriptor()->offset(<indices>)))
+%>

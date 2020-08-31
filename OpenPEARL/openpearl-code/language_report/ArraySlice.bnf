@@ -1,0 +1,5 @@
+
+\htgt{ArraySlice} ::=\\
+\x \hlink{Name}$\S $Array \kw{(} [ \hlink{Index} \kw{,} ] $^{...}$ \hlink{Index} \kw{:} \hlink{Index} \kw{)}
+
+

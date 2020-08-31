@@ -1,0 +1,151 @@
+MODULE(struct_decl);
+
+PROBLEM;
+
+!!
+!! simple structures:
+!!
+DCL v_01 STRUCT [
+            c FIXED
+         ];
+
+DCL v_02 STRUCT [
+            c1 FIXED,
+            c2 CHAR
+         ];
+
+!!
+!! nested structures
+!!
+DCL v_03 STRUCT [
+            c STRUCT [
+                d FIXED
+            ]
+         ];
+
+DCL v_04 STRUCT [
+            c STRUCT [
+                d1 FIXED,
+                d2 CHAR
+            ]
+         ];
+
+DCL v_05 STRUCT [
+            c1 FIXED,
+            c2 STRUCT [
+                d1 FIXED,
+                d2 CHAR
+            ]
+         ];
+
+DCL v_06 STRUCT [
+            c1 FIXED,
+            c2 STRUCT [
+                d1 FIXED,
+                d2 CHAR
+            ],
+            c3 FLOAT
+         ];
+
+!!
+!! array of structures
+!!
+DCL v_20(1:10) STRUCT [
+                    c FIXED
+               ];
+
+DCL v_21(1:10) STRUCT [
+                    c1 FIXED,
+                    c2 CHAR
+                ];
+
+DCL v_22(1:10) STRUCT [
+                    c STRUCT [
+                        d FIXED
+                    ]
+                ];
+
+DCL v_23(1:10) STRUCT [
+                    c STRUCT [
+                        d1 FIXED,
+                        d2 CHAR
+                    ]
+                ];
+
+DCL v_24(1:10) STRUCT [
+                    c1 FIXED,
+                    c2 STRUCT [
+                        d1 FIXED,
+                        d2 CHAR
+                    ]
+                ];
+
+DCL v_25(1:10) STRUCT [
+                    c1 FIXED,
+                    c2 STRUCT [
+                        d1 FIXED,
+                        d2 CHAR
+                    ],
+                    c3 FLOAT
+                ];
+
+!!
+!! array of structures with arrays inside
+!!
+DCL v_30(1:10) STRUCT [
+                    c(11:20) FIXED
+               ];
+
+DCL v_31(1:10) STRUCT [
+                    c1(11:20) FIXED,
+                    c2(21:30) CHAR
+                ];
+
+DCL v_32(1:10) STRUCT [
+                    c(11:20) STRUCT [
+                                d FIXED
+                             ]
+                ];
+
+DCL v_33(1:10) STRUCT [
+                    c STRUCT [
+                        d1(11:20) FIXED,
+                        d2(21:30) CHAR
+                    ]
+                ];
+
+DCL v_34(1:10) STRUCT [
+                    c1 FIXED,
+                    c2(11:20) STRUCT [
+                                d1(21:30) FIXED,
+                                d2        CHAR
+                              ]
+                ];
+
+DCL v_35(1:10) STRUCT [
+                    c1 FIXED,
+                    c2(11:20) STRUCT [
+                                d1              FIXED,
+                                d2(21:30,31:40) CHAR
+                              ],
+                    c3(41:50,51:60,61:70) FLOAT
+                ];
+
+!!
+!! structures with initialization
+!!
+
+/*
+DCL v_101 STRUCT [
+            c FIXED
+         ] INIT(42);
+*/
+DCL v_102 STRUCT [
+            c1 FIXED,
+            c2 CHAR
+         ] INIT(42,'X');
+
+T1: TASK MAIN;
+END;
+
+MODEND;

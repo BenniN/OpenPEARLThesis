@@ -1,0 +1,17 @@
+MODULE (Init);
+
+PROBLEM;
+
+DCL f1     FIXED(15)     INIT(0);
+DCL c1 INV FIXED         INIT(42);
+
+DCL f2     FIXED         INIT(1+2*3);
+
+LENGTH FIXED(22);
+DCL f3     FIXED         INIT(c1*2);
+
+! make automatic test happy
+t: TASK MAIN;
+END;
+
+MODEND;

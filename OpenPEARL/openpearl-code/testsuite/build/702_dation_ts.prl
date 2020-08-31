@@ -1,0 +1,62 @@
+!
+! this test case needs the SampleBasicDation
+!
+MODULE(dationts);
+! declare a TS-dation on an SampleBasicDation and do some operations
+SYSTEM;
+inout: SampleBasicDation;
+stdout:StdOut;
+
+PROBLEM;
+   SPC inout DATION INOUT SYSTEM BASIC FIXED(15) GLOBAL;
+   SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+DCL user DATION INOUT BASIC FIXED(15) CREATED(inout);
+TakeSendTest: TASK MAIN;
+   DCL f FIXED(15) INIT(13);
+   DCL f1 FIXED(15) INIT(3);
+   DCL error FIXED(31);
+
+   OPEN so;   
+
+   OPEN user BY RST(error);
+   CLOSE user;
+
+   OPEN user;
+   SEND f TO user;
+   TAKE f1 FROM user;
+   CLOSE user;
+
+   arraySliceTakeSend;
+ 
+   CLOSE  so;   
+END;
+
+arraySliceTakeSend: PROC;
+   DCL x(4) FIXED(7) INIT(1,2,3,4);
+   DCL f FIXED(15);
+   DCL control FIXED;
+   
+   OPEN user;
+   SEND x(3:4) TO user;
+   TAKE f FROM user;
+
+   control = (x(4) FIT control) * 256 + x(3);
+   IF f NE control THEN
+      PUT 'arraySliceWrite error@1 got ',f, 'instead of ,',control
+        TO so BY A,F(6),A,F(6),SKIP;
+   FIN;
+   TAKE x(1:2) FROM user;
+   IF x(1) NE x(3) OR x(2) NE x(4) THEN
+      PUT 'arraySliceWrite error@2 got ' TO so BY A,SKIP;
+   FIN; 
+   
+   CLOSE user;
+
+   PUT f TO so BY F(6), SKIP;
+
+END;
+
+MODEND;
+

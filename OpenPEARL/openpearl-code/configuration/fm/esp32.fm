@@ -1,0 +1,51 @@
+config ESP32
+        boolean  "Select the runtime sytem for the ESP32"
+	default n
+	help
+	This port targets the ESP32. Target specific 
+	i/o-setting is done directly in the source code.
+	
+	This port is in work. Build and execution problems 
+        may occur selecting this option.
+
+menu "ESP32 specific options"
+	depends on ESP32
+
+config ESP32_IDF_PATH
+	string "path to your esp-idf installation"
+	default "~/esp/esp-idf"
+	help
+	You may install the IDF for the ESP32 at a location of your choice.
+	The path of your installation must be specified here.
+
+	During build, serveral links are set in the IDF folders to
+	integrate the OpenPEARL parts as esp32-components
+	
+config ESP32_CHECK_STACK_OVERFLOW
+	depends on ESP32
+	boolean "check stack overflow in application code"
+	default y
+	help
+	This adds a function call in each funtion entry (and exit)
+        in order to check the current value of the stack pointer.
+	If the stack pointer is near to/or beyond of the stack limit
+        a non catchable exception is raised and the task is terminated.
+	
+	This option relies on the -finstrument-functions option of 
+	the g++ compiler.
+
+config ESP32_FLASH_INTERFACE
+	depends on ESP32
+	string "Name of Interface for serial flashing"
+	default "/dev/ttyUSB0"
+	help
+	If more than one tty<->usb-adapter is used, the device name
+	/dev/ttyUSB0 is no longer guaranteed for the device node name.
+	In this case you should set a symlink-rule in your udev-rules
+	to make a symlink depending on the serial number of the
+	tty<->usb-adapter like:
+
+	SUBSYSTEMS=="usb", ATTRS{idVendor]=="0403", ...
+	   ATTRS{serial}=="A6008isW", SYMLINK+=ttyUart0
+
+endmenu	

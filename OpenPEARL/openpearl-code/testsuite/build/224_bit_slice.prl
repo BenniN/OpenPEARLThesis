@@ -1,0 +1,527 @@
+MODULE(bitslice);
+SYSTEM;
+term: StdOut;
+disc: Disc('./',2);
+
+PROBLEM;
+ SPC disc   DATION INOUT SYSTEM ALL;
+ SPC term DATION OUT SYSTEM ALPHIC;
+ DCL console DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(term);
+ DCL file DATION INOUT ALL DIM(*) FORWARD CREATED(disc);
+
+ DCL (testNbr,fails,totalTests, totalFails) FIXED INIT(0,0,0,0);
+ DCL error INV CHAR(18) INIT ('* error *: test #');
+
+T1: TASK MAIN;
+
+    OPEN console;
+    CALL bitSelect;
+
+    CALL assignRhsSlice;
+    CALL updateTestResults;
+
+    CALL assignLhsSlice;
+    CALL updateTestResults;
+
+    CALL procParamBitSelection;
+    CALL updateTestResults;
+
+    CALL procReturnBitSelection;
+    CALL updateTestResults;
+
+    CALL compareBitSelection;
+    CALL updateTestResults;
+
+    CALL convertTo;
+    CALL updateTestResults;
+
+    CALL writeTo;
+    CALL updateTestResults;
+
+    IF totalFails EQ 0 THEN
+        PUT '*** success: ', totalTests,' completed' TO console 
+        BY A,F(4), A, SKIP;
+    ELSE
+        PUT '*** fail ', totalFails,' from ', totalTests,' tests failed'
+        TO console BY 5LIST, SKIP;
+        __cpp__("pearlrt::Control::setExitCode(1);");
+    FIN;
+
+    CLOSE console;
+
+END;
+
+updateTestResults: PROC;
+   totalTests = totalTests + testNbr;
+   totalFails = totalFails + fails;
+   testNbr = 0;
+   fails = 0;
+END;
+
+bitSelect: PROC;
+   DCL b16 BIT(16) INIT('1234'B4);
+   DCL bit1 BIT(1);
+   DCL index FIXED INIT(1);
+
+   PUT 'bitSelect:', 'as BIT(16)',b16,'as 16*BIT(1)' TO console
+   BY  A,SKIP,A(15),B1(16),SKIP,A(15);
+
+   FOR i TO 16 REPEAT
+      PUT b16.BIT(i) TO console BY B1(1);
+    END;
+
+   PUT TO console BY SKIP;
+END;  
+
+assignRhsSlice: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL result BIT(3);
+   DCL (start, end) FIXED INIT(2,4);
+
+   PUT 'assignment with rhs bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(2);
+   IF result NE '0'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(3);
+   IF result NE '1'B1 THEN
+      PUT error, testNbr, result,' NE 1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(start);
+   IF result NE '0'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(start+1);
+   IF result NE '1'B1 THEN
+      PUT error, testNbr, result,' NE 1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(2:4);
+   IF result NE '010'B1 THEN
+      PUT error, testNbr, result,' NE 010' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := b9.BIT(start:start+2);
+   IF result NE '010'B1 THEN
+      PUT error, testNbr, result,' NE 010' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+   
+END;
+
+assignLhsSlice: PROC;
+   DCL b9 BIT(9) ;
+   DCL (start, end) FIXED INIT(2,4);
+
+   PUT 'assignment with lhs bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   b9 = '0'B1;   ! clear b9
+   b9.BIT(2) := '1'B1;
+   IF b9 NE '01'B1 THEN
+      PUT error, testNbr, b9,' NE 01' TO console
+        BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   b9 = '0'B1;   ! clear b9
+   b9.BIT(start) := '1'B1;
+   IF b9 NE '01'B1 THEN
+      PUT error, testNbr, b9,' NE 01' TO console
+      BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   b9 = '0'B1;   ! clear b9
+   b9.BIT(2:4) := '111'B1;
+   IF b9 NE '0111'B1 THEN
+      PUT error, testNbr, b9,' NE 0111' TO console
+      BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   b9 = '0'B1;   ! clear b9
+   b9.BIT(start:start+2) := '111'B1;
+   IF b9 NE '0111'B1 THEN
+      PUT error, testNbr, b9,' NE 0111' TO console
+      BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+END;
+
+procParamBitSelection: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL result BIT(3);
+   DCL start FIXED INIT(2);
+
+   PUT 'proc parameter with bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procParamBitSelectionHelper(b9.BIT(2));
+   IF result NE '000'B1 THEN
+      PUT error, testNbr, b9,' NE 000' TO console
+        BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procParamBitSelectionHelper(b9.BIT(start));
+   IF result NE '000'B1 THEN
+      PUT error, testNbr, b9,' NE 000' TO console
+        BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procParamBitSelectionHelper(b9.BIT(2:4));
+   IF result NE '010'B1 THEN
+      PUT error, testNbr, b9,' NE 010' TO console
+        BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procParamBitSelectionHelper(b9.BIT(start:start+2));
+   IF result NE '010'B1 THEN
+      PUT error, testNbr, b9,' NE 000' TO console
+        BY A,F(3), X,B1(9),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+END;
+
+procParamBitSelectionHelper: PROC(x BIT(3)) RETURNS(BIT(3));
+   RETURN (x);
+END;
+
+procReturnBitSelection: PROC;
+   DCL result BIT(3);
+
+   DCL start FIXED INIT(2);
+
+   PUT 'proc returns bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procReturnBitSelectionHelper1('01101'B1);
+   IF result NE '110'B1 THEN
+      PUT error, testNbr, result,' NE 110' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   result := procReturnBitSelectionHelper2('01101'B1);
+   IF result NE '110'B1 THEN
+      PUT error, testNbr, result,' NE 110' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+END;
+
+procReturnBitSelectionHelper1: PROC (x BIT(9)) RETURNS(BIT(3));
+   RETURN (x.BIT(2:4));
+END;
+
+procReturnBitSelectionHelper2: PROC (x BIT(9)) RETURNS(BIT(3));
+   DCL start FIXED INIT(2);
+   RETURN (x.BIT(start:start+2));
+END;
+
+compareBitSelection: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL result BIT(3);
+
+   DCL start FIXED INIT(2);
+
+   PUT 'compare bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '0'B1 NE b9.BIT(2) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '0'B1 NE b9.BIT(start) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '1'B1 NE b9.BIT(3) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '1'B1 NE b9.BIT(start+1) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '010'B1 NE b9.BIT(2:4) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF '010'B1 NE b9.BIT(start:start+2) THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(2) NE '0'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(start) NE '0'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(3) NE '1'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(start+1) NE '1'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(2:4) NE '010'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   IF b9.BIT(start:start+2) NE '010'B1 THEN
+      PUT error, testNbr, result,' NE 0' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+END;
+
+convertTo: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL buffer CHAR(9);
+
+   DCL start FIXED INIT(2);
+
+   PUT 'convert to with bit selection start' TO console BY A, SKIP;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(2) TO buffer BY B;
+   IF buffer NE '0' THEN
+      PUT error, testNbr, buffer,' NE 0' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(start) TO buffer BY B;
+   IF buffer NE '0' THEN
+      PUT error, testNbr, buffer,' NE 0' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(3) TO buffer BY B;
+   IF buffer NE '1' THEN
+      PUT error, testNbr, buffer,' NE 1' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(start+1) TO buffer BY B;
+   IF buffer NE '1' THEN
+      PUT error, testNbr, buffer,' NE 1' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(2:4) TO buffer BY B;
+   IF buffer NE '010' THEN
+      PUT error, testNbr, buffer,' NE 0' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! -------
+   testNbr := testNbr + 1;
+   buffer := ' ';
+   CONVERT b9.BIT(start:start+2) TO buffer BY B;
+   IF buffer NE '010' THEN
+      PUT error, testNbr, buffer,' NE 010' TO console
+        BY A,F(3), X,A,A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+END;
+
+writeTo: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL start FIXED INIT(2);
+
+   DCL bit1 BIT(1);
+   DCL bit3 BIT(3);
+
+   PUT 'write to with bit selection' TO console BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit1 = '1'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit1 FROM file;
+   CLOSE file;
+   IF bit1 NE '0'B THEN
+      PUT error, testNbr, bit1,' NE 0B1' TO console
+        BY A,F(3), X,B1(1),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit1 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(3) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit1 FROM file;
+   CLOSE file;
+   IF bit1 NE '1'B THEN
+      PUT error, testNbr, bit1,' NE 1B1' TO console
+        BY A,F(3), X,B1(1),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit3 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(2:4) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit3 FROM file;
+   CLOSE file;
+   IF bit3 NE '010'B THEN
+      PUT error, testNbr, bit1,' NE 010B1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit3 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(start:start+2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit3 FROM file;
+   CLOSE file;
+   IF bit3 NE '010'B THEN
+      PUT error, testNbr, bit1,' NE 010B1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+
+END;
+
+MODEND;
+

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module file="demo.prl" name="abc">
+<system>
+
+<username name="sig1" line="9">
+   <sysname name="FixedRangeSignal"/>
+</username>
+
+<username name="int1" line="10">
+  <sysname name="UnixSignal">
+    <parameters>
+      <FIXED>15</FIXED>
+    </parameters>
+  </sysname>
+</username>
+
+<username name="disc" line="12">
+  <sysname name="Disc">
+     <parameters>
+       <CHAR>'/tmp/folder1'</CHAR>
+       <FIXED>10</FIXED>
+     </parameters>
+  </sysname>
+</username>
+
+</system>
+<problem>
+   <spc type="signal" name="sig1" line="19" global="demo1"/>
+   <spc type="interrupt" name="int1" line="20"  global="demo1"/>
+   <spc type="dation" name="bit2" line="21" global="demo1">
+      <attributes> IN,SYSTEM </attributes>
+      <data>BIT(1)</data>
+   </spc>
+   <spc type="dation" name="disc" line="21" global="demo1">
+      <attributes> OUT,SYSTEM </attributes>
+      <data>ALL</data>
+   </spc>
+   <spc type="dation" name="stdOut" line="22" global="demo1">
+      <attributes> OUT, SYSTEM </attributes>
+      <data>ALPHIC</data>
+   </spc>
+   <spc type="FIXED(15)" name="f15" line="155" global="demo1"/>
+
+   <spc type="TASK" name="t1" line="123" global="demo1"/>
+   <spc type="SEMA" name="s1" line="123" global="demo1"/>
+
+   <spc type="PROC" name="funktion1" line="111" global="demo1">
+     <parameters>FIXED(15) IDENT, FLOAT(24) </parameters>
+     <returns>BIT(1)</returns>
+   </spc>
+
+</problem>
+</module>

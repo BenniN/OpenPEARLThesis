@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<platform file="linux.xml">
+   <dation name="Pipe">
+      <parameters>
+        <CHAR length="32767"> <NotEmpty/> </CHAR>
+        <FIXED length="31"> <FIXEDRANGE>1,9999</FIXEDRANGE> </FIXED>
+        <CHAR length="32767">
+           <ConsistsOf>'OLD','NEW','ANY','OPEN1','CAN','PRM'</ConsistsOf>
+        </CHAR>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>
+   <dation name="Disc">
+      <parameters>
+        <CHAR length="32767"> <NotEmpty/> </CHAR>
+        <FIXED length="31"> <FIXEDGT>0</FIXEDGT> </FIXED>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>
+   <dation name="StdIn">
+      <parameters> </parameters>
+      <attributes>FORWARD, IN, SYSTEM</attributes>
+      <data>ALPHIC</data>
+   </dation>
+   <dation name="StdOut">
+      <parameters> </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+   </dation>
+   <dation name="StdError">
+      <parameters> </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+   </dation>
+   <dation name="Console">
+      <parameters> </parameters>
+      <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+   </dation>
+   <interrupt name="UnixSignal">
+      <parameters>
+         <FIXED length="31">
+            <VALUES>1,2,3,15,16,17</VALUES>
+         </FIXED>
+      </parameters>
+   </interrupt>
+   <dation name="TcpIpServer">
+      <parameters>
+        <FIXED length="31"> <FIXEDRANGE>1,65535</FIXEDRANGE> </FIXED>
+      </parameters>
+      <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>
+   <dation name="ADS1015SE">
+      <parameters>
+         <BIT length="8">
+            <VALUES>
+            '48'B4, '49'B4, '4A'B4, '4B'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="15"><FIXEDRANGE>0,3</FIXEDRANGE></FIXED>
+         <FIXED length="15"><FIXEDRANGE>0,5</FIXEDRANGE></FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="I2CBusProvider" />
+   </dation>
+   <dation name="BME280">
+      <parameters>
+         <BIT length="8">
+            <VALUES>
+            '76'B4, '77'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5,6,7,8</VALUES>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>ALL</data>
+      <needAssociation name="I2CBusProvider" />
+   </dation>
+   <connection name="PCF9685Provider">
+      <parameters>
+         <BIT length="8">
+           <VALUES>
+		'40'B4, '41'B4, '42'B4, '43'B4, '44'B4, '45'B4, '46'B4, '47'B4,
+		'48'B4, '49'B4, '4A'B4, '4B'B4, '4C'B4, '4D'B4, '4E'B4, '4F'B4
+           </VALUES>
+         </BIT>
+         <FIXED length="31">
+            <FIXEDRANGE>3,255</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <associationProvider>
+         <associationType name="PCF9685Provider"/>
+      </associationProvider>
+   </connection>
+   <dation name="PCF9685Channel">
+      <parameters>
+         <FIXED length="31">
+            <FIXEDRANGE>0,15</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, OUT</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="PCF9685Provider" />
+   </dation>
+   <configuration name="Log" instances="1" >
+      <parameters>
+         <CHAR length="4">
+           <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <needAssociation name="AlphicOutProvider"/>
+   </configuration>
+   <connection name="LogFile">
+      <parameters>
+         <CHAR length="32767">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <needAssociation name="NamedAlphicOutProvider"/>
+   </connection>
+   <dation name="SampleBasicDation">
+      <parameters>
+      </parameters>
+      <attributes> BASIC, SYSTEM, IN, OUT, INOUT</attributes>
+      <data>FIXED(15)</data>
+   </dation>
+   <interrupt name="SoftInt">
+      <parameters>
+         <FIXED length="31">
+            <FIXEDRANGE>1,31</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+   </interrupt>
+   <connection name="I2CBus">
+      <parameters>
+         <CHAR length="32767">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="I2CBusProvider"/>
+      </associationProvider>
+   </connection>
+<!-- Signals.xml : auto generated (Thu Aug 29 16:24:26 2019) -->
+   <signal name="InternalSignal"/>
+   <signal name="InternalTaskSignal"/>
+   <signal name="InternalSignalsSignal"/>
+   <signal name="InternalDationSignal"/>
+   <signal name="InternalDatatypeSignal"/>
+   <signal name="InternalConfigurationSignal"/>
+   <signal name="TerminateRequestSignal"/>
+   <signal name="TaskSignal"/>
+   <signal name="PrioOutOfRangeSignal"/>
+   <signal name="TaskRunningSignal"/>
+   <signal name="TaskSuspendedSignal"/>
+   <signal name="TaskTerminatedSignal"/>
+   <signal name="IllegalSchedulingSignal"/>
+   <signal name="PriorityNotMapableSignal"/>
+   <signal name="ArithmeticSignal"/>
+   <signal name="FixedRangeSignal"/>
+   <signal name="FixedDivideByZeroSignal"/>
+   <signal name="ArithmeticOverflowSignal"/>
+   <signal name="ArithmeticUnderflowSignal"/>
+   <signal name="ArithmeticDivideByZeroSignal"/>
+   <signal name="SemaOverflowSignal"/>
+   <signal name="BoltStateSignal"/>
+   <signal name="DurationDivideByZeroSignal"/>
+   <signal name="DurationRangeSignal"/>
+   <signal name="FloatIsNaNSignal"/>
+   <signal name="FloatIsINFSignal"/>
+   <signal name="BitIndexOutOfRangeSignal"/>
+   <signal name="CharacterTooLongSignal"/>
+   <signal name="CharacterIndexOutOfRangeSignal"/>
+   <signal name="CharacterNotValidSignal"/>
+   <signal name="DationSignal"/>
+   <signal name="DationParamSignal"/>
+   <signal name="DationNotOpenSignal"/>
+   <signal name="OpenFailedSignal"/>
+   <signal name="CloseFailedSignal"/>
+   <signal name="PositioningFailedSignal"/>
+   <signal name="InvalidPositioningSignal"/>
+   <signal name="ReadingFailedSignal"/>
+   <signal name="WritingFailedSignal"/>
+   <signal name="DationIndexBoundSignal"/>
+   <signal name="DationNotSupportedSignal"/>
+   <signal name="DationEOFSignal"/>
+   <signal name="NoEOFDationSignal"/>
+   <signal name="DationTFURecordSignal"/>
+   <signal name="DationDatatypeSignal"/>
+   <signal name="DationFormatRepetitionValue"/>
+   <signal name="DationFormatRepetitionOverflow"/>
+   <signal name="ArrayIndexOutOfBoundsSignal"/>
+   <signal name="RefNotInitializedSignal"/>
+   <signal name="DeviceNotFoundSignal"/>
+   <signal name="FormatSignal"/>
+   <signal name="NoMoreCharactersSignal"/>
+   <signal name="DurationFormatSignal"/>
+   <signal name="ClockFormatSignal"/>
+   <signal name="FixedFormatSignal"/>
+   <signal name="CharacterFormatSignal"/>
+   <signal name="BitFormatSignal"/>
+   <signal name="ClockValueSignal"/>
+   <signal name="FixedValueSignal"/>
+   <signal name="BitValueSignal"/>
+   <signal name="DurationValueSignal"/>
+   <signal name="ExpFormatSignal"/>
+   <signal name="ExpValueSignal"/>
+</platform>

@@ -1,0 +1,159 @@
+MODULE(Tasking);
+
+SYSTEM;
+
+ stdout: StdOut;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+   DCL (startTime,endTime) CLOCK;
+   DCL goon BIT(1);
+   DCL nonBlockingSema SEMA PRESET(1);
+   DCL semaToBlock SEMA PRESET(0);
+
+tTasking: TASK MAIN;
+   OPEN so;
+   CALL requestReleaseNonBlocking;
+   CALL requestReleaseBlocking;
+   CALL taskActivation;
+   CLOSE so;
+END;
+
+
+requestReleaseNonBlocking: PROC;
+   DCL (executionTime, loopExecution, perOperation) DURATION;
+   DCL nbrOfRepetitions FIXED INIT(1000);
+   startTime := NOW;
+          REQUEST nonBlockingSema;
+          RELEASE nonBlockingSema;
+   endTime := NOW;
+   executionTime := endTime - startTime;
+   PUT 'REQUEST-RELEASE' TO so BY A, SKIP;
+   PUT ' ', 'single', executionTime TO so
+   BY A(25),A(6),D(13,6), SKIP;
+
+   startTime := NOW;
+   TO 10 REPEAT
+   TO 1000 REPEAT
+      TO nbrOfRepetitions REPEAT
+      END;
+   END;
+   END;
+   endTime := NOW;
+   loopExecution := endTime - startTime;
+   PUT 'loop offset ', loopExecution TO so BY A, D(13,6), SKIP;
+
+   startTime := NOW;
+   TO 10 REPEAT
+   TO 1000 REPEAT
+      TO nbrOfRepetitions REPEAT
+          REQUEST nonBlockingSema;
+          RELEASE nonBlockingSema;
+      END;
+   END;
+   END;
+   endTime := NOW;
+   executionTime := endTime - startTime - loopExecution;
+   perOperation := executionTime / 10 / nbrOfRepetitions;
+ 
+   PUT ' ', 'avg per 1000 operations', perOperation TO so
+   BY A(25),A, D(13,6), SKIP;
+END;
+
+
+requestReleaseBlocking: PROC;
+   DCL nbrOfRepetitions FIXED INIT(10);
+    DCL executionTime DURATION;
+    DCL executionTimeSum DURATION;
+    DCL executionTimeMin DURATION;
+    DCL executionTimeMax DURATION;
+
+    goon := '1'B1;
+    executionTimeMin := 10 SEC;
+    executionTimeSum := 0 SEC;
+    ! executionTimeMax := -10 SEC;
+    executionTimeMax := executionTimeSum - executionTimeMin;
+
+    ACTIVATE taskToActivateAndWaitForRelease;
+
+    TO nbrOfRepetitions REPEAT
+
+       startTime := NOW;
+       RELEASE semaToBlock;
+   
+       AFTER 0.1 SEC RESUME;
+       executionTime := endTime - startTime;
+       IF executionTime < executionTimeMin THEN
+          executionTimeMin := executionTime;
+       FIN;
+       IF executionTime > executionTimeMax THEN
+          executionTimeMax := executionTime;
+       FIN;
+       executionTimeSum := executionTimeSum + executionTime;
+    END; 
+     
+
+   PUT 'REQUEST-RELEASE blocking ', 'avg', executionTimeSum/nbrOfRepetitions,
+       ' ',              'min', executionTimeMin,
+       ' ',              'max', executionTimeMax  TO so
+   BY A(25),A, D(14,6), SKIP;
+
+   ! lets end the test task
+   goon := '0'B1; 
+   RELEASE semaToBlock;
+END;
+
+taskToActivateAndWaitForRelease: TASK;
+    WHILE goon REPEAT
+       REQUEST semaToBlock;
+       endTime := NOW;
+    END;
+END;
+
+
+
+taskActivation: PROC;
+   DCL nbrOfRepetitions FIXED INIT(10);
+    DCL executionTime DURATION;
+    DCL executionTimeSum DURATION;
+    DCL executionTimeMin DURATION;
+    DCL executionTimeMax DURATION;
+
+    executionTimeMin := 10 SEC;
+    executionTimeSum := 0 SEC;
+    ! executionTimeMax := -10 SEC;
+    executionTimeMax := executionTimeSum - executionTimeMin;
+
+    TO nbrOfRepetitions REPEAT
+    startTime := NOW;
+   
+    ACTIVATE taskToActivate;
+    AFTER 0.1 SEC RESUME;
+    executionTime := endTime - startTime;
+    IF executionTime < executionTimeMin THEN
+       executionTimeMin := executionTime;
+    FIN;
+    IF executionTime > executionTimeMax THEN
+       executionTimeMax := executionTime;
+    FIN;
+    executionTimeSum := executionTimeSum + executionTime;
+    END; 
+     
+
+   PUT 'Task ACTIVATE ', 'avg', executionTimeSum/nbrOfRepetitions,
+       ' ',              'min', executionTimeMin,
+       ' ',              'max', executionTimeMax  TO so
+   BY A(25),A, D(14,6), SKIP;
+     
+
+END;
+
+taskToActivate: TASK;
+    endTime := NOW;
+END;
+
+
+MODEND;
+

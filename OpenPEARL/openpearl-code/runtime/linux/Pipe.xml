@@ -1,0 +1,14 @@
+   <dation name="Pipe">
+      <parameters>
+        <CHAR length="32767" name="nameOfPipe"> <NotEmpty/> </CHAR>
+        <FIXED length="31" name="lengthOfPipe"> <FIXEDRANGE>1,9999</FIXEDRANGE> </FIXED>
+        <CHAR length="32767" name="openAttributes">
+           <ConsistsOf>'OLD','NEW','ANY','OPEN1','CAN','PRM'</ConsistsOf>
+        </CHAR>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+      <checks>
+         <check instances="oncePerSet" set="Pipe($nameOfPipe)"/>
+      </checks>
+   </dation>

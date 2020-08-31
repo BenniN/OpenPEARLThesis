@@ -1,0 +1,14 @@
+   <dation name="RPiDigitalIn">
+      <parameters>
+         <FIXED length="31" name="start">
+             <FIXEDRANGE>2,27</FIXEDRANGE> 
+         </FIXED>
+         <FIXED length="31" nick="name"> <FIXEDGT>0</FIXEDGT></FIXED>
+         <CHAR length="1" name="pullUpDown"><VALUES>'u','d','n'</VALUES></CHAR>
+      </parameters>
+      <attributes> IN, SYSTEM, BASIC</attributes>
+      <data>BIT($width)</data>
+      <checks>
+        <check pinDoesNotCollide="RPiGPIO" start="$start" width="$width" />
+      </checks>
+   </dation>

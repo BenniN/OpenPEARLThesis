@@ -1,0 +1,10 @@
+MODULE(m1);
+
+PROBLEM;
+   ! must fail -- missing identifier 
+   SPC x FIXED IDENT();
+
+! test for sandalone END statement
+END;
+
+MODEND;

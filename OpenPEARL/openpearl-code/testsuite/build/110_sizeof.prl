@@ -1,0 +1,85 @@
+MODULE(sizeof);
+SYSTEM;
+  so: StdOut;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC ;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED (so);
+
+t1: TASK MAIN;
+    DCL ok BIT(1) INIT('1'B1);
+    DCL du DURATION;
+    DCL cl CLOCK;
+    DCL f FIXED(28);
+    DCL c CHAR(1);
+    DCL fl FLOAT(52);
+    DCL fArray(10,20) FIXED(31);
+!    DCL s STRUCT [ x FIXED(31), y FLOAT(53) ]; ! << not supported yet
+
+    OPEN stdout;
+
+    f := (SIZEOF DURATION ) FIT f ;
+    IF f NE 8 THEN
+        PUT 'SIZEOF(DURATION) delivers ',f , ' instead of 8' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+    f := (SIZEOF du ) FIT f ;
+    IF f NE 8 THEN
+        PUT 'SIZEOF(DURATION) delivers ',f , ' instead of 8' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+    f := (SIZEOF cl)  FIT f;
+    IF f NE 8 THEN
+        PUT 'SIZEOF(CLOCK) delivers ',f , ' instead of 8' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+    f := (SIZEOF f)  FIT f;
+    IF f NE 4 THEN
+        PUT 'SIZEOF(FIXED(28)) delivers ',f , ' instead of 4' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+    f :=( SIZEOF(c)) FIT f;
+    IF f NE 1 THEN
+        PUT 'SIZEOF(CHAR(1)) delivers ',f , ' instead of 1' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+    f := (SIZEOF(fl)) FIT f;
+    IF f NE 8 THEN
+        PUT 'SIZEOF(FLOAT(53)) delivers ',f , ' instead of 8' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+
+    f := (SIZEOF(fArray)) FIT f;     ! <<< produces C++ errors due to wrong C++ code
+!     __cpp__(" _f = sizeof(data_fArray);");
+    IF f NE 800 THEN
+        PUT 'SIZEOF(FIXED(31) Array 10*20) delivers ',f , ' instead of 1600'
+           TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
+
+/* 
+    f = SIZEOF(s) FIT f;
+    IF f NE 16 THEN   ! 16 due to alignemnt reasons
+        PUT 'SIZEOF(STRUCT[FIXED(31),FLOAT(53)] delivers ',f , 
+           ' instead of 16'
+           TO stdout
+           BY A,F(3), A, SKIP; 
+    FIN;
+*/
+   
+    IF ok THEN
+        PUT 'success' TO stdout BY A,SKIP;
+    ELSE
+        PUT 'failure' TO stdout BY A,SKIP;
+    FIN;
+
+    CLOSE stdout;
+END;
+
+MODEND;

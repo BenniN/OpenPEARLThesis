@@ -1,0 +1,6 @@
+This folder contains some demo applications for the OpenPEARL system
+
+sched_demo: illustrate some task activations
+arrayDemo: illustrates usage of arrays in procedures
+fakultaet: illustrates recursive function call
+evelator: program for the elevator model of the hs furtangen

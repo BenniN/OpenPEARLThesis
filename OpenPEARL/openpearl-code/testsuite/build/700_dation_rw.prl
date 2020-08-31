@@ -1,0 +1,213 @@
+MODULE(dationrw);
+SYSTEM;
+! Disc defines a folder on the file system. The second parameters
+! denotes the maximum number of simultaneous open files
+disc: Disc('/tmp/' ,10);
+stdout: StdOut;
+
+PROBLEM;
+   SPC disc DATION INOUT SYSTEM ALL;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+DCL tableAS DATION INOUT FIXED DIM(*) FORWARD CREATED(disc);
+
+writeArraySlice: PROC (errors FIXED(15) IDENT);
+   DCL data(10) FIXED;
+   DCL f FIXED;
+   DCL (start,end) FIXED INIT(2,4);
+
+   FOR i TO 10 REPEAT
+      data(i) := i;
+   END;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(2:4) TO tableAS;
+   CLOSE tableAS;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ f FROM tableAS;
+   IF f NE 2 THEN
+      PUT 'writeArraySlice failed @1a' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 3 THEN
+      PUT 'writeArraySlice failed @1b' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 4 THEN
+      PUT 'writeArraySlice failed @1c' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(start:end) TO tableAS;
+   CLOSE tableAS;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ f FROM tableAS;
+   IF f NE 2 THEN
+      PUT 'writeArraySlice failed @2a' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 3 THEN
+      PUT 'writeArraySlice failed @2b' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 4 THEN
+      PUT 'writeArraySlice failed @2c' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(end:start) TO tableAS BY RST(f);
+   CLOSE tableAS;
+   IF f NE 326 THEN
+      PUT 'writeArraySlice failed @3' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+END;
+
+readArraySlice: PROC (errors FIXED(15) IDENT);
+   DCL data(10) FIXED;
+   DCL f FIXED;
+   DCL (start,end) FIXED INIT(2,4);
+
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+      f := i;   ! enshure proper type
+      WRITE f TO tableAS;
+   END;
+   CLOSE tableAS;
+
+   !---
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+   END;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(2:4) FROM tableAS;
+   IF data(2) NE 1 OR data(3) NE 2 OR data(4) NE 3 THEN
+      PUT 'readArraySlice failed @1' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+   END;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(start:end) FROM tableAS;
+   IF data(2) NE 1 OR data(3) NE 2 OR data(4) NE 3 THEN
+      PUT 'readArraySlice failed @2' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(end:start) FROM tableAS BY RST(f);
+   IF f NE 326  THEN
+      PUT 'readArraySlice failed @3' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+END;
+
+DCL table62 DATION INOUT ALL DIM(*) DIRECT CREATED(disc);
+ticket62: TASK;
+     DCL f FIXED(15) INIT(42);
+     DCL (f4,f5) FIXED(15) INIT(0,0);
+     DCL error FIXED(15);
+
+     OPEN table62 BY ANY,IDF('file1.txt');
+
+     WRITE f4 TO table BY POS(3);
+     CLOSE table62;
+END;
+
+DCL table126 DATION INOUT FIXED(15) DIM(*) DIRECT CREATED(disc);
+ticket126: TASK;
+     DCL f FIXED(15) INIT(42);
+     DCL (f4,f5) FIXED(15) INIT(0,0);
+     DCL error FIXED(15);
+
+     OPEN table126 BY ANY,IDF('file1.txt');
+
+     WRITE f4 TO table BY POS(1), POS(2);
+     CLOSE table126;
+END;
+
+DCL table216 DATION INOUT FIXED(15) DIM(*) DIRECT CREATED(disc);
+ticket216: TASK;
+     DCL f FIXED(15) INIT(42);
+     DCL (f4,f5) FIXED(15) INIT(0,0);
+     DCL error FIXED(15);
+
+     OPEN table216 BY ANY,IDF('file1.txt');
+
+     WRITE f4 TO table BY EOF;
+     CLOSE table216;
+END;
+
+DCL table DATION INOUT FIXED(15) DIM(*) DIRECT CREATED(disc);
+FileTest1: TASK MAIN;
+     DCL f FIXED(15) INIT(42);
+     DCL (f4,f5) FIXED(15) INIT(0,0);
+     DCL error FIXED(15);
+
+     OPEN stdOut;
+     OPEN table BY ANY,IDF('file1.txt');
+
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+              WRITE f4 TO table;
+
+              WRITE f TO table BY POS(4), RST(error), POS(5);
+              READ f5,f4 FROM table BY RST(error), POS(4), POS(5);
+              READ f4 FROM table BY RST(error), POS(4);
+              READ f5 FROM table BY RST(error), POS(5);
+              READ f4 FROM table BY RST(error), POS(4);
+     CLOSE table;
+     IF (error /= 0) THEN
+        PUT 'error: RST-value should be zero (', error ,') ' TO stdOut 
+             BY A, F(3), A, SKIP;
+__cpp__("pearlrt::Control::setExitCode(1);");
+     FIN;
+
+     IF (f /= f5) THEN
+        PUT 'error: did not read the same value (', f,',', f5,') ' TO stdOut
+         BY A,F(6),A,F(6),A, SKIP;
+	 __cpp__("pearlrt::Control::setExitCode(1);");
+       error = 1;
+     FIN;
+     IF (f4 /= 0) THEN
+       PUT 'error: f4 should be zero (', f4, ') ' TO stdOut 
+         BY A, F(6),A,SKIP;
+	 __cpp__("pearlrt::Control::setExitCode(1);");
+       error = 1;
+     FIN;
+
+     writeArraySlice(error);
+     readArraySlice(error);
+
+    IF error == 0 THEN
+      PUT 'success' TO stdOut BY A, SKIP;
+    FIN;
+
+END;
+MODEND;
+
+

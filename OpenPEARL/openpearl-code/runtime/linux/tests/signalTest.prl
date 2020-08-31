@@ -1,0 +1,103 @@
+/*
+this code is only for illustration of signalTest.cc
+
+The compiler is not capable to produce the correct code
+*/
+MODULE(signalTest);
+SYSTEM;
+  so: StdOut;
+  overflow: FixedRangeSignal;
+  div0: FixedDivideByZeroSignal;
+  arith: ArithmeticSignal;
+
+PROBLEM;
+
+   SPC so DATION OUT ALPHIC SYSTEM;
+   SPC (overflow, div0, arith) SIGNAL;
+
+   DCL to DATION OUT ALPHIC FORWARD DIM(*,80) CREATED(so);
+
+x: PROC(p FIXED);
+   DCL k FIXED;
+
+
+restart:
+
+    PUT '---------------' TO to BY A, SKIP;
+
+   ! register all arithmetic errors
+   ON arith: BEGIN
+       PUT  'proc x: arithmetic error (returning)' TO to BY A,SKIP;
+       RETURN;
+   END;
+
+   IF p == 1 THEN
+      ! register overflow as specific arithmetic error
+      ON overfl: BEGIN
+         PUT 'proc x: Overflow occured (returning)' TO to BY A,SKIP;
+         RETURN;
+      END;
+   FIN;
+
+   IF p > 5 THEN
+       ! register other owerflow reaction
+       ON overfl: BEGIN
+         PUT 'Overflow occured (terminating)' TO to BY A, SKIP;
+         TERMINATE; 
+       END;
+   FIN;
+
+   k= 2;
+
+    ! should cause arithemetic reaction
+    IF p == 10 THEN
+       k = 10//(k-k);
+    FIN;
+
+    ! register divide by 0 special reaction
+    ON div0: BEGIN
+         PUT 'PROC X: divide by 0 (restarting)' TO to BY A, SKIP;
+         IF p EQ 6 THEN
+            GOTO exit;
+         FIN;
+         IF p EQ 12 THEN
+           k := 11/(k-k);  ! this should delegate to the next layer  
+         FIN;
+         p = 6;
+         GOTO restart;
+    END;
+
+    IF p == 11 THEN
+       k = 10//(k-k);
+    FIN;
+
+    IF p == 12 THEN
+       ! cause divBy0 and do a divideBy0 in the handler
+       k = 10//(k-k); 
+    FIN;
+
+    TO 100 REPEAT
+      k = k * k;
+    END;
+exit:;
+END;
+
+
+
+t1: TASK MAIN;
+    pearlrt::Fixed<15> f;
+
+    f = 0;
+    CALL x(f);
+    f = 11;
+    CALL x(f);
+    f = 10;
+    CALL x(f);
+    f = 1;
+    CALL x(f);
+    f = 12;
+    CALL x(f);
+END;
+
+MODEND;
+

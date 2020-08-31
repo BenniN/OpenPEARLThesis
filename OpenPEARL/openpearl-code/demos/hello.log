@@ -1,0 +1,5 @@
+2020.08.24-09:05:51| INFO|OpenPEARL compiler version v0.8.9.40
+2020.08.24-09:05:51| INFO|Start compiling of:hello.prl
+2020.08.24-09:05:51| INFO|Semantic Check: Attributing parse tree with expression type information
+2020.08.24-09:05:51| INFO|Constant folding pass
+2020.08.24-09:05:51| INFO|Semantic Check: Check assignment statements

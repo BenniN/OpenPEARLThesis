@@ -1,0 +1,21 @@
+config DOC_PREPORT
+        boolean  "Create Language Report from TeX Source"
+	default n
+	help
+	You can produce the OpenPEARL language definition from the
+	provided LaTeX sources. This option is set to false, since some
+	special LaTeX packages are required for this job.
+
+#################
+# this option was removed for better layout of the language 
+# report; the markers are still in the TeX-source as comments
+#config DOC_PREPORT_SHOW_CHANGES
+#	depends on DOC_PREPORT
+#	boolean "include PEARL90 and OpenPEARL version"
+#	default n
+#	help
+#	This produces an output with the language definition of PEARL90
+#	and in combination with the changes for OpenPEARL.
+#	
+#	Select 'n', if you want only the language definition of OpenPEARL.
+

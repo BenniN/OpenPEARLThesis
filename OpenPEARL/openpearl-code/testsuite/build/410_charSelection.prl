@@ -1,0 +1,576 @@
+MODULE(rst);
+SYSTEM;
+stdout: StdOut;
+disc: Disc('./',2);
+
+PROBLEM;
+   SPC disc   DATION INOUT SYSTEM ALL;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+   DCL file DATION INOUT ALL DIM(*) FORWARD CREATED(disc);
+
+   DCL error CHAR(20) INIT('**** error: test ');
+
+   DCL testNbr FIXED INIT(0);
+   DCL fails FIXED INIT(0);
+   DCL (totalTests, totalFails) FIXED INIT(0,0);
+
+test: TASK MAIN;
+
+   OPEN  so;
+   CALL assignRhsCharSelection;
+   CALL addTestSummary;
+   CALL assignLhsCharSelection;
+   CALL addTestSummary;
+   CALL procParamCharSelection;
+   CALL addTestSummary;
+   CALL procReturnCharSelection;
+   CALL addTestSummary;
+   CALL compareCharSelection;
+   CALL addTestSummary;
+   CALL convertTo;
+   CALL addTestSummary;
+   CALL writeTo;
+   CALL addTestSummary;
+
+
+   IF totalFails EQ 0 THEN
+      PUT totalTests,' tests performed -- all ok' TO so BY F(4), A, SKIP;
+   ELSE
+      PUT totalTests,' tests performed -- ', totalFails,' failed' TO so
+      BY  F(4),    A,                    F(4),    A, SKIP;
+      __cpp__("pearlrt::Control::setExitCode(1);");
+   FIN;
+   CLOSE so;
+END;
+
+addTestSummary: PROC;
+   totalTests := totalTests + testNbr;
+   totalFails := totalFails + fails;
+   testNbr := 0;
+   fails := 0;
+END;
+
+assignRhsCharSelection: PROC;
+   DCL result CHAR(10);
+   DCL source CHAR(20) INIT('1234567890ABCDEFGHIJ');
+   DCL (start,end) FIXED INIT(2,4);
+   DCL x FIXED;
+
+   PUT 'assign with char selection on RHS' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := source.CHAR(2);
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := source.CHAR(2:4);
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := source.CHAR(start);
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := source.CHAR(start:end);
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := source.CHAR(start:start+2);
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),A,A,SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   x := TOFIXED source.CHAR(2);
+   IF x NE 50 THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   x := TOFIXED source.CHAR(start);
+   IF x NE 50 THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+END;
+
+assignLhsCharSelection: PROC;
+   DCL result CHAR(10);
+   DCL (start,end) FIXED INIT(2,4);
+   DCL x FIXED;
+
+   PUT 'assign with char selection on LHS' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := ' ';
+   result.CHAR(2) :=  'a';
+   IF result NE ' a' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := ' ';
+   result.CHAR(2:4) :='abc';
+   IF result NE ' abc' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := ' ';
+   result.CHAR(start) := 'a';
+   IF result NE ' a' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result.CHAR(start:end) := 'abc';
+   IF result NE ' abc' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result.CHAR(start:start+2) := 'abc';
+   IF result NE ' abc' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+END;
+
+procParamCharSelection: PROC;
+   DCL result CHAR(10);
+   DCL source CHAR(20) INIT('1234567890ABCDEFGHIJ');
+   DCL (start,end) FIXED INIT(2,4);
+   DCL x FIXED;
+
+   PUT 'PROCEDURE with char selection as parameter' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procParamCharSelectionHelper(source.CHAR(2));
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procParamCharSelectionHelper(source.CHAR(2:4));
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procParamCharSelectionHelper(source.CHAR(start));
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procParamCharSelectionHelper(source.CHAR(start:end));
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procParamCharSelectionHelper(source.CHAR(start:start+2));
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+
+END;
+
+procParamCharSelectionHelper: PROC (x CHAR(4) ) RETURNS (CHAR(4));
+   RETURN (x);
+END;
+
+procReturnCharSelection: PROC;
+   DCL result CHAR(10);
+   DCL source CHAR(20) INIT('1234567890ABCDEFGHIJ');
+   DCL (start,end) FIXED INIT(2,4);
+   DCL x FIXED;
+
+   PUT 'PROCEDURE with char selection as RESULT' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procResultCharSelectionHelper1('12345');
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procResultCharSelectionHelper2('12345');
+   IF result NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procResultCharSelectionHelper3('12345');
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procResultCharSelectionHelper4('12345');
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   result := procResultCharSelectionHelper5('12345');
+   IF result NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+END;
+
+procResultCharSelectionHelper1: PROC (x CHAR(5) ) RETURNS (CHAR(4));
+   DCL (start,end) FIXED INIT(2,4);
+   RETURN (x.CHAR(2));
+END;
+
+procResultCharSelectionHelper2: PROC (x CHAR(5) ) RETURNS (CHAR(4));
+   DCL (start,end) FIXED INIT(2,4);
+   RETURN (x.CHAR(start));
+END;
+
+procResultCharSelectionHelper3: PROC (x CHAR(5) ) RETURNS (CHAR(4));
+   DCL (start,end) FIXED INIT(2,4);
+   RETURN (x.CHAR(2:4));
+END;
+
+procResultCharSelectionHelper4: PROC (x CHAR(5) ) RETURNS (CHAR(4));  
+   DCL (start,end) FIXED INIT(2,4);
+   RETURN (x.CHAR(start:end));
+END;
+
+procResultCharSelectionHelper5: PROC (x CHAR(5) ) RETURNS (CHAR(4));  
+   DCL (start,end) FIXED INIT(2,4);
+   RETURN (x.CHAR(start:start+2));
+END;
+
+compareCharSelection: PROC;
+   DCL source1 CHAR(20) INIT('1234567890ABCDEFGHIJ');
+   DCL source2 CHAR(20) INIT('1234567890ABCDEFGHIJ');
+   DCL (start,end) FIXED INIT(2,4);
+   DCL x FIXED;
+
+   PUT 'compare char selection with char selection and char' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(2) NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start) NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(2:4) NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start:end) NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start:start+2) NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(end-2:start+2) NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '2' NE source1.CHAR(2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '2' NE source1.CHAR(start) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '234' NE source1.CHAR(2:4) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '234' NE source1.CHAR(start:end)  THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '234' NE source1.CHAR(start:start+2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF '234' NE source1.CHAR(end-2:start+2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(2) NE source1.CHAR(2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start) NE source1.CHAR(start) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(2:4) NE source1.CHAR(2:4) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start:end) NE source1.CHAR(start:end) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(start:start+2) NE source1.CHAR(start:start+2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   IF source1.CHAR(end-2:start+2) NE source1.CHAR(end-2:start+2) THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+END;
+
+convertTo: PROC;
+   DCL buffer CHAR(50);
+   DCL data CHAR(20) INIT ('1234567890abcdefghij');
+   DCL (start,end) FIXED INIT(2,4);
+
+   PUT 'convert to with char selection and char' TO so BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   CONVERT data.CHAR(2) TO buffer BY A;
+   IF buffer NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   CONVERT data.CHAR(start) TO buffer BY A;
+   IF buffer NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   CONVERT data.CHAR(2:4) TO buffer BY A;
+   IF buffer NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   CONVERT data.CHAR(start:end) TO buffer BY A;
+   IF buffer NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   CONVERT data.CHAR(start:start+2) TO buffer BY A;
+   IF buffer NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+END;
+
+writeTo: PROC;
+   DCL char1 CHAR;
+   DCL char3 CHAR(3);
+   DCL data CHAR(20) INIT ('1234567890abcdefghij');
+   DCL (start,end) FIXED INIT(2,4);
+
+   PUT 'write to with char selection' TO so BY A,SKIP;
+
+
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char1 FROM file;
+   CLOSE file;
+
+   IF char1 NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char1 FROM file;
+   CLOSE file;
+
+   IF char1 NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(2:4) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+PUT char3 TO so BY A, SKIP;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start:end) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start:start+2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+END;
+MODEND;
+
+

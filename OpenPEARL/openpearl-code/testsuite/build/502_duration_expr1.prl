@@ -1,0 +1,54 @@
+MODULE(durationexpr1);
+! declare and initialize durations at module and task level
+! and perform some calculations
+PROBLEM;
+   DCL xxxxx1 DURATION INIT(1234.654321 SEC);
+
+   DCL x DURATION INIT(1 SEC);
+   DCL x1 DURATION INIT(1 HRS 3 MIN 1.1 SEC);
+   DCL x2 DURATION INIT(1 MIN);
+   DCL x3 DURATION INIT(1 HRS);
+   DCL x4 DURATION INIT(1 HRS 2 MIN 3.45 SEC);
+
+   DCL nxxxxx1 DURATION INIT(-1234.654321 SEC);
+
+   DCL nx DURATION INIT(-1 SEC);
+   DCL nx1 DURATION INIT(-1 HRS 3 MIN 1.1 SEC);
+   DCL nx2 DURATION INIT(-1 MIN);
+   DCL nx3 DURATION INIT(-1 HRS);
+   DCL nx4 DURATION INIT(-1 HRS 2 MIN 3.45 SEC);
+
+T1: TASK MAIN;
+   DCL x DURATION INIT(1 SEC);
+   DCL x1 DURATION INIT(1.1 SEC);
+   DCL x2 DURATION INIT(1 MIN);
+   DCL x3 DURATION INIT(1 HRS);
+   DCL x4 DURATION INIT(1 HRS 2 MIN 3.45 SEC);
+
+   DCL nx DURATION INIT(- 1 SEC);
+   DCL nx1 DURATION INIT(- 1.1 SEC);
+   DCL nx2 DURATION INIT(-1 MIN);
+   DCL nx3 DURATION INIT(-1 HRS);
+   DCL nx4 DURATION INIT( - 1 HRS 2 MIN 3.45 SEC);
+
+
+   DCL f12 FLOAT(23) INIT(1.2);
+   DCL f FLOAT(23);
+
+   x := -x;
+   x := 1 SEC;
+   x := -1 SEC;
+   
+   x := x1 + x2 + x3 + x4;
+   x := x  * f12;
+   f := x4 / x2;
+   x2 := 1HRS 2MIN 3.6SEC;
+    x := x2 + 1HRS 2MIN 10SEC;
+
+   x := nx1 + nx2 + nx3 + nx4;
+   x := x  * f12;
+   f := nx4 / nx2;
+   nx2 := 1HRS 2MIN 3.6SEC;
+    x := nx2 - 1HRS 2MIN 10SEC;
+END;
+MODEND;

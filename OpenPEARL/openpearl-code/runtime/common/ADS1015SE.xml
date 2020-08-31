@@ -1,0 +1,17 @@
+   <dation name="ADS1015SE">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '48'B4, '49'B4, '4A'B4, '4B'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="15" name="channel"><FIXEDRANGE>0,3</FIXEDRANGE></FIXED>
+         <FIXED length="15" name="gain"><FIXEDRANGE>0,5</FIXEDRANGE></FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check pin2DoesNotCollide="ADS1015SE($iicAdr)" start="$channel" />
+      </checks>
+   </dation>

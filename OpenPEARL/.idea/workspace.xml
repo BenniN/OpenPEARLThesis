@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e594e3a3-137d-4d05-baf4-2c6f431d003b" name="Default Changelist" comment="project from link">
+      <change afterPath="$PROJECT_DIR$/.idea/OpenPEARL.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/prl_cc.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearl.tokens" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearlBaseVisitor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearlLexer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearlLexer.tokens" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearlParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/compiler/src/org/smallpearl/compiler/SmallPearlVisitor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/.config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/.config.old" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/include/auto.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/include/auto.conf.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/include/autoconf.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/include/autoconf.tex" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/include/tristate.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/conf.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/checklist.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/inputbox.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/menubox.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/textbox.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/util.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/lxdialog/yesno.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/mconf.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/configuration/kconfig/zconf.tab.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/hello" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/hello.cc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/hello.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/hello.out" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/hello.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/pearl_log.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/demos/system.cc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/flashinterface.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/convertList" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/imc.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckI2CAdrDoesNotCollide$I2CDevice.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckI2CAdrDoesNotCollide.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckInstances.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckMultipleSystemParts.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckPinsDoNotCollide$PinProvider.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckPinsDoNotCollide$UsedPin.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckPinsDoNotCollide.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckSpcDcl.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/checks/CheckSystempart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/main/CodeGenerator.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/main/InterModuleChecker.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/main/ReadXml.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/Association.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/ConfigurationSystemPart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/DclProblemPart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/Module.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/ModuleEntrySystemPart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/Parameter.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/Platform.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/PlatformSystemElement.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/SpcDclProblemPart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/types/SpcProblemPart.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/utilities/EvaluateNamedExpression$SimpleIntegerExpressionEvaluator.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/utilities/EvaluateNamedExpression.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/utilities/Log.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/imc3/out/imc/utilities/NodeUtils.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/prl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/cc_bin.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/ADS1015SE.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Array.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/BME280.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Bolt.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/CSemaCommon.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/CharSlice.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Character.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Clock.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/ConsoleCommon.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Control.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationDim.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationDim1.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationDim2.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationDim3.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationPG.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationRW.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/DationTS.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Duration.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Fixed.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Fixed63.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/FloatHelper.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/FullDuplexDationAbortNB.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/GetBitString.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/GetClock.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/GetDuration.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/GetHelper.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/IOFormats.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/IOJob.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Interrupt.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/LM75.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Log.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/LogFile.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/MutexCommon.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PCA9685.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PCA9685Channel.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PCF8574In.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PCF8574Out.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PCF8574Pool.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Prio.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PriorityQueue.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PutBitString.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PutClock.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PutDuration.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/PutHelper.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/RefChar.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/RefCharSink.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/RefCharSource.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Rst.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SampleBasicDation.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/ScheduleSignalAction.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Semaphore.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Signals.hcc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Signals.hh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Signals.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Signals.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SoftInt.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/Source.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/StringDationConvert.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SystemDation.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SystemDationNB.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SystemDationNBSink.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/SystemDationNBSource.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TFUBuffer.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TaskCommon.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TaskList.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TaskMonitor.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TaskTimerCommon.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/TaskWhenLinks.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/UserDation.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/UserDationNB.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/bosch/bme280.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/compare.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/common/signals.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/includeComposer/dws" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/includeComposer/ic" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/includeComposer/lex.yy.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/.depend" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/CSema.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Console.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Disc.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/I2CBus.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/InterruptableSystemDationNB.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Log.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Mutex.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Pipe.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/PrioMapper.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/StdError.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/StdIn.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/StdOut.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/Task.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/TaskMonitor.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/TaskTimer.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/TcpIpServer.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/UnixSignal.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/capabilitiesFromPermissions.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/cc_bin.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/libOpenPEARLlinux.a" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/linux.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/os.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/pearl.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/linux/run_bin.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/run_bin.inc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openpearl-code/runtime/targets.inc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openpearl-code/installPackages" beforeDir="false" afterPath="$PROJECT_DIR$/openpearl-code/installPackages" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectId" id="1gsC4b9bUSRbviuOFrT9V6uzTU3" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Dokumente/Thesis" />
+    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e594e3a3-137d-4d05-baf4-2c6f431d003b" name="Default Changelist" comment="" />
+      <created>1598893724561</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1598893724561</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="project from link" />
+    <option name="LAST_COMMIT_MESSAGE" value="project from link" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1085" y="556" width="447" height="513" key="FileChooserDialogImpl" timestamp="1598894487381">
+      <screen x="67" y="27" width="2493" height="1573" />
+    </state>
+    <state x="1085" y="556" width="447" height="513" key="FileChooserDialogImpl/67.27.2493.1573@67.27.2493.1573" timestamp="1598894487381" />
+    <state x="1160" y="712" key="Github.ShareDialog" timestamp="1598894504892">
+      <screen x="67" y="27" width="2493" height="1573" />
+    </state>
+    <state x="1160" y="712" key="Github.ShareDialog/67.27.2493.1573@67.27.2493.1573" timestamp="1598894504892" />
+    <state x="802" y="448" key="SettingsEditor" timestamp="1598894303906">
+      <screen x="67" y="27" width="2493" height="1573" />
+    </state>
+    <state x="802" y="448" key="SettingsEditor/67.27.2493.1573@67.27.2493.1573" timestamp="1598894303906" />
+    <state x="908" y="549" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1598893956056">
+      <screen x="67" y="27" width="2493" height="1573" />
+    </state>
+    <state x="908" y="549" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.2493.1573@67.27.2493.1573" timestamp="1598893956056" />
+  </component>
+</project>

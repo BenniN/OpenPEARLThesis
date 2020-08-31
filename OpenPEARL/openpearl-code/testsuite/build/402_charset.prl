@@ -1,0 +1,224 @@
+/*
+* [The "BSD license"]
+*  Copyright (c) 2012-2019 Marcel Schaible
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*  1. Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*  2. Redistributions in binary form must reproduce the above copyright
+*     notice, this list of conditions and the following disclaimer in the
+*     documentation and/or other materials provided with the distribution.
+*  3. The name of the author may not be used to endorse or promote products
+*     derived from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+*  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+*  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+*  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+*  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+*  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+*  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+MODULE(charset);
+
+PROBLEM;
+
+!---------------------------------------------------------------------------------------------
+! NON-PRINTABLE CONTROL CHARACTERS:
+!                                   Dec     Hex     Oct     Char    Description
+!---------------------------------------------------------------------------------------------
+DCL c_00 CHAR INIT(''\00\'');     ! 0       00      000     ^@      Null (NUL)
+DCL c_01 CHAR INIT(''\01\'');     ! 1       01      001     ^A      Start of heading (SOH)
+DCL c_02 CHAR INIT(''\02\'');     ! 2       02      002     ^B      Start of text (STX)
+DCL c_03 CHAR INIT(''\03\'');     ! 3       03      003     ^C      End of text (ETX)
+DCL c_04 CHAR INIT(''\04\'');     ! 4       04      004     ^D      End of transmission (EOT)
+DCL c_05 CHAR INIT(''\05\'');     ! 5       05      005     ^E      Enquiry (ENQ)
+DCL c_06 CHAR INIT(''\06\'');     ! 6       06      006     ^F      Acknowledge (ACK)
+DCL c_07 CHAR INIT(''\07\'');     ! 7       07      007     ^G      Bell (BEL)
+DCL c_08 CHAR INIT(''\08\'');     ! 8       08      010     ^H      Backspace (BS)
+DCL c_09 CHAR INIT(''\09\'');     ! 9       09      011     ^I      Horizontal tab (HT)
+DCL c_0A CHAR INIT(''\0A\'');     ! 10      0A      012     ^J      Line feed (LF)
+DCL c_0B CHAR INIT(''\0B\'');     ! 11      0B      013     ^K      Vertical tab (VT)
+DCL c_0C CHAR INIT(''\0C\'');     ! 12      0C      014     ^L      New page/form feed (FF)
+DCL c_0D CHAR INIT(''\0D\'');     ! 13      0D      015     ^M      Carriage return (CR)
+DCL c_0E CHAR INIT(''\0E\'');     ! 14      0E      016     ^N      Shift out (SO)
+DCL c_0F CHAR INIT(''\0F\'');     ! 15      0F      017     ^O      Shift in (SI)
+DCL c_10 CHAR INIT(''\10\'');     ! 16      10      020     ^P      Data link escape (DLE)
+DCL c_11 CHAR INIT(''\11\'');     ! 17      11      021     ^Q      Device control 1 (DC1)
+DCL c_12 CHAR INIT(''\12\'');     ! 18      12      022     ^R      Device control 2 (DC2)
+DCL c_13 CHAR INIT(''\13\'');     ! 19      13      023     ^S      Device control 3 (DC3)
+DCL c_14 CHAR INIT(''\14\'');     ! 20      14      024     ^T      Device control 4 (DC4)
+DCL c_15 CHAR INIT(''\15\'');     ! 21      15      025     ^U      Negative acknowledge (NAK)
+DCL c_16 CHAR INIT(''\16\'');     ! 22      16      026     ^V      Synchronous idle (SYN)
+DCL c_17 CHAR INIT(''\17\'');     ! 23      17      027     ^W      End of transmission block (ETB)
+DCL c_18 CHAR INIT(''\18\'');     ! 24      18      030     ^X      Cancel (CAN)
+DCL c_19 CHAR INIT(''\19\'');     ! 25      19      031     ^Y      End of medium (EM)
+DCL c_1A CHAR INIT(''\1A\'');     ! 26      1A      032     ^Z      Substitute (SUB)
+DCL c_1B CHAR INIT(''\1B\'');     ! 27      1B      033     ^[      Escape (ESC)
+DCL c_1C CHAR INIT(''\1C\'');     ! 28      1C      034     ^\      File separator (FS)
+DCL c_1D CHAR INIT(''\1D\'');     ! 29      1D      035     ^]      Group separator (GS)
+DCL c_1E CHAR INIT(''\1E\'');     ! 30      1E      036     ^^      Record separator (RS)
+DCL c_1F CHAR INIT(''\1F\'');     ! 31      1F      037     ^_      Unit separator (US)
+
+!---------------------------------------------------------------------------------------------
+! PRINTABLE CHARACTERS:
+!                                   Dec     Hex     Oct     Char    Description
+!---------------------------------------------------------------------------------------------
+DCL c_20 CHAR INIT(' ');          ! 32      20      040             Space
+DCL c_21 CHAR INIT('!');          ! 33      21      041     !       Exclamation mark
+DCL c_22 CHAR INIT('"');          ! 34      22      042     "       Quotation mark/Double quote
+DCL c_23 CHAR INIT('#');          ! 35      23      043     #       Number sign
+DCL c_24 CHAR INIT('$');          ! 36      24      044     $       Dollar sign
+DCL c_25 CHAR INIT('%');          ! 37      25      045     %       Percent sign
+DCL c_26 CHAR INIT('&');          ! 38      26      046     &       Ampersand
+DCL c_27 CHAR INIT(''\27\'');     ! 39      27      047     '       Apostrophe/Single quote
+DCL c_28 CHAR INIT('(');          ! 40      28      050     (       Left parenthesis
+DCL c_29 CHAR INIT(')');          ! 41      29      051     )       Right parenthesis
+DCL c_2A CHAR INIT('*');          ! 42      2A      052     *       Asterisk
+DCL c_2B CHAR INIT('+');          ! 43      2B      053     +       Plus sign
+DCL c_2C CHAR INIT(',');          ! 44      2C      054     ,       Comma
+DCL c_2D CHAR INIT('-');          ! 45      2D      055     -       Hyphen/Minus
+DCL c_2E CHAR INIT('.');          ! 46      2E      056     .       Full stop/Period
+DCL c_2F CHAR INIT('/');          ! 47      2F      057     /       Solidus/Slash
+DCL c_30 CHAR INIT('0');          ! 48      30      060     0       Digit zero
+DCL c_31 CHAR INIT('1');          ! 49      31      061     1       Digit one
+DCL c_32 CHAR INIT('2');          ! 50      32      062     2       Digit two
+DCL c_33 CHAR INIT('3');          ! 51      33      063     3       Digit three
+DCL c_34 CHAR INIT('4');          ! 52      34      064     4       Digit four
+DCL c_35 CHAR INIT('5');          ! 53      35      065     5       Digit five
+DCL c_36 CHAR INIT('6');          ! 54      36      066     6       Digit six
+DCL c_37 CHAR INIT('7');          ! 55      37      067     7       Digit seven
+DCL c_38 CHAR INIT('8');          ! 56      38      070     8       Digit eight
+DCL c_39 CHAR INIT('9');          ! 57      39      071     9       Digit nine
+DCL c_3A CHAR INIT(':');          ! 58      3A      072     :       Colon
+DCL c_3B CHAR INIT(';');          ! 59      3B      073     ;       Semicolon
+DCL c_3C CHAR INIT('<');          ! 60      3C      074     <       Less-than sign
+DCL c_3D CHAR INIT('=');          ! 61      3D      075     =       Equal/Equality sign
+DCL c_3E CHAR INIT('>');          ! 62      3E      076     >       Greater-than sign
+DCL c_3F CHAR INIT('?');          ! 63      3F      077     ?       Question mark
+DCL c_40 CHAR INIT('@');          ! 64      40      100     @       Commercial at/At sign
+DCL c_41 CHAR INIT('A');          ! 65      41      101     A       Latin capital letter A
+DCL c_42 CHAR INIT('B');          ! 66      42      102     B       Latin capital letter B
+DCL c_43 CHAR INIT('C');          ! 67      43      103     C       Latin capital letter C
+DCL c_44 CHAR INIT('D');          ! 68      44      104     D       Latin capital letter D
+DCL c_45 CHAR INIT('E');          ! 69      45      105     E       Latin capital letter E
+DCL c_46 CHAR INIT('F');          ! 70      46      106     F       Latin capital letter F
+DCL c_47 CHAR INIT('G');          ! 71      47      107     G       Latin capital letter G
+DCL c_48 CHAR INIT('H');          ! 72      48      110     H       Latin capital letter H
+DCL c_49 CHAR INIT('I');          ! 73      49      111     I       Latin capital letter I
+DCL c_4A CHAR INIT('J');          ! 74      4A      112     J       Latin capital letter J
+DCL c_4B CHAR INIT('K');          ! 75      4B      113     K       Latin capital letter K
+DCL c_4C CHAR INIT('L');          ! 76      4C      114     L       Latin capital letter L
+DCL c_4D CHAR INIT('M');          ! 77      4D      115     M       Latin capital letter M
+DCL c_4E CHAR INIT('N');          ! 78      4E      116     N       Latin capital letter N
+DCL c_4F CHAR INIT('O');          ! 79      4F      117     O       Latin capital letter O
+DCL c_50 CHAR INIT('P');          ! 80      50      120     P       Latin capital letter P
+DCL c_51 CHAR INIT('Q');          ! 81      51      121     Q       Latin capital letter Q
+DCL c_52 CHAR INIT('R');          ! 82      52      122     R       Latin capital letter R
+DCL c_53 CHAR INIT('S');          ! 83      53      123     S       Latin capital letter S
+DCL c_54 CHAR INIT('T');          ! 84      54      124     T       Latin capital letter T
+DCL c_55 CHAR INIT('U');          ! 85      55      125     U       Latin capital letter U
+DCL c_56 CHAR INIT('V');          ! 86      56      126     V       Latin capital letter V
+DCL c_57 CHAR INIT('W');          ! 87      57      127     W       Latin capital letter W
+DCL c_58 CHAR INIT('X');          ! 88      58      130     X       Latin capital letter X
+DCL c_59 CHAR INIT('Y');          ! 89      59      131     Y       Latin capital letter Y
+DCL c_5A CHAR INIT('Z');          ! 90      5A      132     Z       Latin capital letter Z
+DCL c_5B CHAR INIT('[');          ! 91      5B      133     [       Left square bracket
+DCL c_5C CHAR INIT(''\5C\'');     ! 92      5C      134     \       Reverse solidus/Backslash
+DCL c_5D CHAR INIT(']');          ! 93      5D      135     ]       Right square bracket
+DCL c_5E CHAR INIT('^');          ! 94      5E      136     ^       Circumflex accent/Caret
+DCL c_5F CHAR INIT('_');          ! 95      5F      137     _       Underscore/Low line
+DCL c_60 CHAR INIT('`');          ! 96      60      140     `       Grave accent
+DCL c_61 CHAR INIT('a');          ! 97      61      141     a       Latin small letter a
+DCL c_62 CHAR INIT('b');          ! 98      62      142     b       Latin small letter b
+DCL c_63 CHAR INIT('c');          ! 99      63      143     c       Latin small letter c
+DCL c_64 CHAR INIT('d');          ! 100     64      144     d       Latin small letter d
+DCL c_65 CHAR INIT('e');          ! 101     65      145     e       Latin small letter e
+DCL c_66 CHAR INIT('f');          ! 102     66      146     f       Latin small letter f
+DCL c_67 CHAR INIT('g');          ! 103     67      147     g       Latin small letter g
+DCL c_68 CHAR INIT('h');          ! 104     68      150     h       Latin small letter h
+DCL c_69 CHAR INIT('i');          ! 105     69      151     i       Latin small letter i
+DCL c_6A CHAR INIT('j');          ! 106     6A      152     j       Latin small letter j
+DCL c_6B CHAR INIT('k');          ! 107     6B      153     k       Latin small letter k
+DCL c_6C CHAR INIT('l');          ! 108     6C      154     l       Latin small letter l
+DCL c_6D CHAR INIT('m');          ! 109     6D      155     m       Latin small letter m
+DCL c_6E CHAR INIT('n');          ! 110     6E      156     n       Latin small letter n
+DCL c_6F CHAR INIT('o');          ! 111     6F      157     o       Latin small letter o
+DCL c_70 CHAR INIT('p');          ! 112     70      160     p       Latin small letter p
+DCL c_71 CHAR INIT('q');          ! 113     71      161     q       Latin small letter q
+DCL c_72 CHAR INIT('r');          ! 114     72      162     r       Latin small letter r
+DCL c_73 CHAR INIT('s');          ! 115     73      163     s       Latin small letter s
+DCL c_74 CHAR INIT('t');          ! 116     74      164     t       Latin small letter t
+DCL c_75 CHAR INIT('u');          ! 117     75      165     u       Latin small letter u
+DCL c_76 CHAR INIT('v');          ! 118     76      166     v       Latin small letter v
+DCL c_77 CHAR INIT('w');          ! 119     77      167     w       Latin small letter w
+DCL c_78 CHAR INIT('x');          ! 120     78      170     x       Latin small letter x
+DCL c_79 CHAR INIT('y');          ! 121     79      171     y       Latin small letter y
+DCL c_7A CHAR INIT('z');          ! 122     7A      172     z       Latin small letter z
+DCL c_7B CHAR INIT('{');          ! 123     7B      173     {       Left curly bracket
+DCL c_7C CHAR INIT('|');          ! 124     7C      174     |       Vertical line/Vertical bar
+DCL c_7D CHAR INIT('}');          ! 125     7D      175     }       Right curly bracket
+DCL c_7E CHAR INIT('~');          ! 126     7E      176     ~       Tilde
+
+!---------------------------------------------------------------------------------------------
+! NON-PRINTABLE CHARACTERS:
+!                                   Dec     Hex     Oct     Char    Description
+!---------------------------------------------------------------------------------------------
+DCL c_7F CHAR INIT(''\7F\'');     ! 127     7F      177     DEL     Delete (DEL)
+
+!---------------------------------------------------------------------------------------------
+! UTF-8 Subset
+!---------------------------------------------------------------------------------------------
+DCL charset1 CHAR(20) INIT('äöüßÄÖÜµ€@');
+DCL charset2 CHAR(20) INIT('1Ä2'\1B\'');
+DCL charset3 CHAR(20) INIT(''\1B\'1Ä2');
+DCL charset4 CHAR(20) INIT('1Ä'\1B\'2');
+DCL charset5 CHAR(20) INIT(''\1B\''\1B\''\1B\''\1B\''\1B\'');
+DCL charset6 CHAR(20) INIT('äöüßÄÖÜµ€@');
+DCL charset7 CHAR(4) INIT('xäx');
+
+! make automatic test happy
+main: TASK MAIN;
+DCL all CHAR(128) INIT(' ');
+DCL ch CHAR;
+
+all := c_00 >< c_01 >< c_02 >< c_03 >< c_04 >< c_05 >< c_06 >< c_07 ><
+       c_08 >< c_09 >< c_0A >< c_0B >< c_0C >< c_0D >< c_0E >< c_0F ><
+       c_10 >< c_11 >< c_12 >< c_13 >< c_14 >< c_15 >< c_16 >< c_17 ><
+       c_18 >< c_19 >< c_1A >< c_1B >< c_1C >< c_1D >< c_1E >< c_1F ><
+       c_20 >< c_21 >< c_22 >< c_23 >< c_24 >< c_25 >< c_26 >< c_27 ><
+       c_28 >< c_29 >< c_2A >< c_2B >< c_2C >< c_2D >< c_2E >< c_2F ><
+       c_30 >< c_31 >< c_32 >< c_33 >< c_34 >< c_35 >< c_36 >< c_37 ><
+       c_38 >< c_39 >< c_3A >< c_3B >< c_3C >< c_3D >< c_3E >< c_3F ><
+       c_40 >< c_41 >< c_42 >< c_43 >< c_44 >< c_45 >< c_46 >< c_47 ><
+       c_48 >< c_49 >< c_4A >< c_4B >< c_4C >< c_4D >< c_4E >< c_4F ><
+       c_50 >< c_51 >< c_52 >< c_53 >< c_54 >< c_55 >< c_56 >< c_57 ><
+       c_58 >< c_59 >< c_5A >< c_5B >< c_5C >< c_5D >< c_5E >< c_5F ><
+       c_60 >< c_61 >< c_62 >< c_63 >< c_64 >< c_65 >< c_66 >< c_67 ><
+       c_68 >< c_69 >< c_6A >< c_6B >< c_6C >< c_6D >< c_6E >< c_6F ><
+       c_70 >< c_71 >< c_72 >< c_73 >< c_74 >< c_75 >< c_76 >< c_77 ><
+       c_78 >< c_79 >< c_7A >< c_7B >< c_7C >< c_7D >< c_7E;
+
+
+      ch = charset4.CHAR(4);
+      IF TOFIXED ch EQ 27 THEN
+      __cpp__("printf(\"ok\\n\");");
+      ELSE
+          ch = charset4.CHAR(4);
+      __cpp__("printf(\"fail expect: 27 is %d\\n\",_ch.data[0]);"
+              "pearlrt::Control::setExitCode(1);"
+
+      );
+      FIN;
+
+END;
+
+MODEND;

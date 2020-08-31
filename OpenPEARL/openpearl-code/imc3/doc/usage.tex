@@ -1,0 +1,22 @@
+\chapter{Usage}
+
+\section{Invocation}
+The inter module checker is invoked with
+\begin{verbatim}
+imc -b <target> -o <output> pearlModules...
+\end{verbatim}
+
+The option -b is  recommended. The given parameter defines the
+platform definition XML file, which is expected ether in the current 
+working directory (first)
+or in installation directory of OpenPEARL.
+
+The option -o defaults to system.cc in the current working directory.
+
+The option --help prints a help message with all supported options.
+
+The list of pearl modules is passed without extension. Pathnames are 
+possible.
+
+
+

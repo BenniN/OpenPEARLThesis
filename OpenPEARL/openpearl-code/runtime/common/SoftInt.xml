@@ -1,0 +1,10 @@
+   <interrupt name="SoftInt">
+      <parameters>
+         <FIXED length="31" name="interruptNumber">
+            <FIXEDRANGE>1,31</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <checks>
+         <check instances="oncePerSet" set="SoftInt($interruptNumber)"/>
+      </checks>
+   </interrupt>

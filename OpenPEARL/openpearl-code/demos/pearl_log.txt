@@ -1,0 +1,20 @@
+ 9:06:08.078740 INFO:  PEARL system startup
+ 9:06:08.078750 INFO:  number of CPUs: 4
+ 9:06:08.078841 INFO:     setting number of used cpus to 1
+ 9:06:08.078853 INFO:  old RLIMIT_CPU (soft/hard)=(-1,-1) sec
+ 9:06:08.078858 INFO:     set to (soft/hard)=(300,301) sec
+ 9:06:08.078864 WARN:  error setting SCHED_RR --> using normal scheduler
+ 9:06:08.078867 INFO:  System reports: SIGRTMIN SIGRTMAX range is [34,64]: ok
+ 9:06:08.078889 INFO:  Defined Tasks
+ 9:06:08.078894 INFO:    Name                 Prio isMain run on core
+ 9:06:08.078897 INFO:    hello                 255   1     all
+ 9:06:08.078900 INFO:  start all main-threads
+ 9:06:08.078902 DEBUG: task hello: activate hello with prio 255
+ 9:06:08.078927 INFO:  hello: may use cores: 0
+ 9:06:08.078939 INFO:  system startup complete
+ 9:06:08.078946 INFO:  hello: starts io-operation (reason=4) direction=2
+ 9:06:08.078990 DEBUG: hello: leaveIO: taskstate=1
+ 9:06:08.078993 DEBUG: hello: check wait queue
+ 9:06:08.078996 DEBUG: nobody waits --> done
+ 9:06:08.078998 INFO:  hello: terminate request: received for task hello (with taskState=1)
+ 9:06:08.079011 INFO:  no more tasks active or scheduled --> stop

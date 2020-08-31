@@ -1,0 +1,30 @@
+   <dation name="BME280">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '76'B4, '77'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="7" name="p1">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p2">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p3">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p4">
+           <VALUES>0,1,2,3,4</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p5">
+           <VALUES>0,1,2,3,4,5,6,7,8</VALUES>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>ALL</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check i2cAdrDoesNotCollide="BME280" nonShareable="$iicAdr" />
+      </checks>
+   </dation>

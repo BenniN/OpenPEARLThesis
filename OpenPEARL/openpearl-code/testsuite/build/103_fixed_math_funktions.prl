@@ -1,0 +1,19 @@
+MODULE(fixedoperations);
+! test for fixed operations with SQRT, SIN,CON, TAN, ATAN, 
+! EXP, LN, TANH
+!  
+! this is only coded for FIXED(15) at the first step
+! result should by FLOAT(23);
+
+PROBLEM;
+
+T1: TASK MAIN;
+   DCL x15 FIXED(15);
+   DCL y FLOAT(23);
+   
+   y = SQRT x15;
+   
+END;
+
+MODEND;
+

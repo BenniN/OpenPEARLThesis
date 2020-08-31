@@ -1,0 +1,17 @@
+/*
+Demonstration application 'Hello World'
+*/
+
+MODULE(mhello);
+
+SYSTEM;
+
+PROBLEM;
+
+! the task hello is started automatically due to the attribute 'MAIN'
+hello: TASK MAIN;
+__cpp__("printf(\"los\\n\");");
+END;
+
+MODEND;
+

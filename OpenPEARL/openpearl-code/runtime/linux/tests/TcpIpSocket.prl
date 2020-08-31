@@ -1,0 +1,45 @@
+MODULE(TcpIpSocket);
+
+SYSTEM;
+	httpSocket: TcpIpServer(1234);
+        stdout: StdOut;
+        stdin: StdIn;
+
+PROBLEM;
+	SPC httpSocket DATION INOUT SYSTEM ALL;
+	DCL usHttpSocket DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(httpSocket);  
+	DCL request CHAR(78);
+	SPC stdout DATION OUT SYSTEM ALPHIC;
+	DCL so DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);  
+	SPC stdin DATION IN SYSTEM ALPHIC;
+	DCL si DATION IN ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdin);  
+
+        DCL counter FIXED INIT(0);
+
+httpTask:TASK MAIN;
+	OPEN so;
+	OPEN si;
+         PUT 'TcpIpServer started' TO so BY A, SKIP;
+	
+        REPEAT
+           PUT 'wait for request' TO so BY A, SKIP;
+           OPEN usHttpSocket;
+   	   GET request FROM usHttpSocket BY A, SKIP;
+           counter := counter + 1;
+           PUT '>', request,'<' TO so BY A,A,A, SKIP;
+
+           PUT 'HTTP/1.1 200 ok' TO usHttpSocket BY A, SKIP;
+           PUT 'Connection: close' TO usHttpSocket BY A, SKIP;
+           PUT 'Context-Type: text/html' TO usHttpSocket BY A, SKIP,SKIP;
+
+           PUT '<HTML><HEAD<TITLE>test</TITLE></HEAD>' TO usHttpSocket BY A, SKIP,SKIP;
+           PUT '<BODY>number of site calls:',counter,'</BODY></HTML>' TO usHttpSocket
+             BY A,F(6),A, SKIP;
+           CLOSE usHttpSocket;
+           PUT 'request completed: socket closed' TO so BY A, SKIP;
+
+	END;
+END;
+
+MODEND;
+

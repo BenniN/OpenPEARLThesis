@@ -1,0 +1,147 @@
+\chapter{Procedures}
+
+\section{Declaration ans Specification}
+PEARL procedures are mapped to C++ functions.
+They have a hidden first parameter with the pointer to the executing task.
+The namespace rules apply as on data values.
+
+
+\section{REF PROC}
+References to procedures are mapped to the template class Ref, which allows
+the assignment and derefence operations.
+
+\section{Formal Parameter Types}
+Bit and Char-slices need special attention.
+
+\subsection{Call By Value}
+In this case an intermediate copy of the actual parameter 
+must become created. This may be done by the C++ compiler via the 
+normal call by value mechanisme.
+
+\subsection{INV Call By Value}
+This must be treated by the compiler. No assignment is allowed to the formal 
+parameter, nether passing by reference without INV to other
+procedures is allowed.
+
+\subsection{Call By Reference (IDENT)}
+All data types except \textbf{BIT} and \textbf{CHAR} types may be 
+passed as C++ pointers.
+
+For \textbf{BIT} and \textbf{CHAR} types the actual parameter may be a slice.
+Any changes on the formal parameter must affect the current parameter.
+To enshure the operation on the same primary data, \textbf{CHAR} and 
+\textbf{BIT} values 
+must be passed as slice by value. 
+Even overlaping slices in the parameter list may be possible.
+
+Slices \textbf{MUST NOT} passed as pointers, since this may cause
+side effects when passing the same slice as different parameters.
+
+Example:
+\begin{PEARLCode}
+DCL bits BIT(16) INIT('ABCD'B4);
+DCL hello CHAR(10) INIT('Hello');
+...
+p: PROC(b1 BIT(4) IDENT, b2 BIT(16) IDENT, c CHAR(2) IDENT);
+   b1 := '5'B4;      !! this affects bits.BIT(2:5) !!
+   IF b2.BIT(3) THEN !! this must check the modified value !!
+      ...
+   FIN;
+
+   c := 'x';         !! set the first two characters of the
+                     !! actual parameter to 'x '
+END;
+
+t: TASK;
+   CALL p(bits.BIT(2:5), bits, hello.CHAR(1:2));
+END;
+\end{PEARLCode}
+
+\begin{CppCode}
+...
+pearlrt::BitString<16> _bits(0xabcd);
+pearlrt::Character<10> _hello("Hello");
+
+void _p(pearlrt::Task * me,
+        pearlrt::BitSlice _b1,
+        pearlrt::BitSlice _b2,
+        pearlrt::CharSlice _c) {
+
+    // modify the bits in the actual parameter (IDENT)
+    _b1.setSlice(CONST_BIT4_five);
+
+    // select the bit inside the slice and obtain the bool value
+    if ((_b1.
+            getSlice(CONST_FIXED_3)->
+            mkBitString(pearlrt::BitString<1>*typeInfo)
+        ).getBoolean() ) {
+       ...
+    }
+    ...
+   _c.getSlice(CONST_FIXED_1,CONST_FIXED_2)->setSlice(CONST_CHAR_1_x);
+}
+
+DCLTASK(_t, ...) {
+   ...
+   _p(me,*pearlrt::BitSlice(_bits).getSlice(2,5),
+         pearlrt::BitSlice(_bits),
+         pearlrt::CharSlice(_c).getSlice(1)); 
+\end{CppCode}
+
+\paragraph{Notes:} 
+\begin{enumerate}
+\item Bit and char slices are passed by value. The slices point 
+internally to the base data value.
+\item passing a slice to another procedure by reference (\textbf{IDENT}) 
+is possible as complete or subslice.
+\item Constants and \textbf{INV} variables are not allowed as actual
+ parameters if the formal parameter is not INV (refer \ref{sec_inv_ident}).
+\end{enumerate}
+
+\subsection{INV Call By Reference (IDENT)}
+\label{sec_inv_ident}
+The compiler must check that there is no change of the actual parameter
+by assignment or parameter passing.
+
+The invocation with constants is possible. They must become converted 
+to a bit- or char slice by the compiler. For other data types, the compiler
+must create a constant data element for the given value.
+
+\subsection{REF Types}
+\textbf{REF} types may be passed by value as well as by reference 
+( \textbf{IDENT}).
+The mapping to C++ pointers applies.
+This applies also for type \textbf{REF CHAR(}x\textbf{)}
+ (e.g. \textbf{REF CHAR(4)});.
+
+\subsubsection{REF CHAR()}
+A type \textbf{REF CHAR()} allows a kind of variable string length.
+This type realized in the RefChar-class. 
+
+Depending on the actual parameter, diffent actions must be performed 
+by the compiler. If the actual parameter is of type:
+\begin{description}
+\item[CHAR(x):] A temporary RefChar data must be created and passed.
+\item[REF CHAR():] The RefChar data object may by passed directly 
+   only by value. Passing a REF CHAR() by IDENT may cause inconsistent
+   data storage access, if the REF CHAR() is assigned to a procedure
+   local CHAR-variable.
+\end{description}
+
+\subsubsection{REF INV CHAR()}
+Even constants may be passed. In this case, the compiler must create
+a temporary RefChar object for any CHAR-values and expressions.
+
+\subsection{Arrays}
+Arrays must be passed in two parameters. The array descriptor and the 
+array data.
+
+
+ 
+
+\subsection{STRUCT}
+The passing of STRUCTs works like simple variables.
+
+\section{Return Value}
+The language report forbids \textbf{REF CHAR()} as result type.
+

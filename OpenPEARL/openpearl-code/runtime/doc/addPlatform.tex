@@ -1,0 +1,76 @@
+\section{Basic about the Build System}
+The build system is based in make.
+At top level of OpenPEARL the configuration is set using Kconfig.
+
+If a new platform should be added some changes must be done to integrate
+the new platform to the OpenPEARL build system.
+
+\paragraph{Note:}
+Be aware that OpenPEARL is provided under a 3-clause BSD license.
+Do not integrate any parts which violates this license.
+
+\begin{enumerate}
+\item Invent a suitable identifier for the new platform
+like \verb|esp32|.
+\item define a numeric id for the platform like 3. This number is required
+  to select a specific platform for the application build.
+  Refer to the used numbers in the target 'install' 
+  in \verb|runtime/Makefile|.
+\item define a preprocessor identifier for small platform specific
+   changes in common files for similar platforms, like \verb|OPENPEARL_ESP32|.
+   Pass this identifier with the \verb|-D| option to the c/c++ compiler
+\end{enumerate}
+
+\section{Kconfig}
+Add in \verb|configuration/fm| a platform specific Kconfig file and add this 
+file to \verb|configuration/fm/runtime.fm|.
+
+\begin{itemize}
+\item provide an overall option \verb|XXX| 
+   to enable the platform and set the default 
+      to 'n'
+\item provide additional options required and set then as 
+   \verb|depends on XXX|
+\end{itemize}
+
+\section{Integration to the Build system}
+\begin{itemize}
+\item create a directory for your platform in \verb|.../runtime/| (eg. esp32)
+\item provide a \verb|Makefile| in the platform directory for the
+   targets
+  \begin{description}
+  \item[clean] as usual 
+  \item[all] just build the platform specific files. Additionally,
+     the build system expects
+     \begin{description}
+        \item[pearl.h] with a single header file for this platform with 
+         all OpenPEARL specific classes. You create this with the 
+         \em{include composer}
+       \item[cc\_bin.inc] must invoke the compiler with all required 
+                flags. Use \verb|$fn.cc| for the name of the application
+                source file and \verb|system.cc| for the representation
+                of the system part.
+       \item[run\_bin.inc] do all operations to start the application on
+               your platform. This includes specific file translations and
+               downloading.
+     \end{description}
+  \item[install] copy the platform specific files to 
+	\verb|$CONFIG\_INSTALL\_Target|
+  \item[prepare] create dummy files for the files to be installed later.
+    And set rw-permisions for regular users. This build is executed 
+    initially with root-priviledges
+  \end{description}
+\item add your platform to \verb|runtime/Makefile| in the make targets
+   \begin{itemize}
+   \item prepare
+   \item install
+   \item cc\_bin.inc
+   \item run\_bin.inc
+   \item and a plain target for your platform, which invokes for the target
+      'all' (eg. esp32)
+   \end{itemize}
+\item if you need special OpenPEARL signals in your platform, refer to the 
+   chapter \ref{sec_signal_definition}.
+\item provide a platform manual, which describes the usage of the new platform.
+\end{itemize}
+

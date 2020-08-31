@@ -1,0 +1,13 @@
+MODULE(takeFromNoDation);
+
+PROBLEM;
+
+   DCL x FIXED;
+
+t1: TASK MAIN;
+   DCL y FLOAT;
+
+   TAKE x FROM y;
+END;
+MODEND;
+

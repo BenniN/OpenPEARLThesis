@@ -1,0 +1,135 @@
+MODULE(float_expr);
+
+! lets check if the operators deliver reasonable values
+! we work with FIXED(15) and FLOAT(23)
+SYSTEM;
+   stdOut: StdOut;
+
+PROBLEM;
+   SPC stdOut DATION OUT SYSTEM ALPHIC;
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD NOCYCL STREAM CREATED(stdOut);
+
+   DCL ok BIT(1) INIT('1'B1);
+
+T1: TASK MAIN;
+    OPEN so;
+    CALL testMonadic;
+    CALL powFloat;
+
+    IF ok THEN
+       PUT 'success' TO so BY A, SKIP;
+    ELSE
+       PUT 'fail' TO so BY A, SKIP;
+    FIN;
+
+    CLOSE so;
+END;
+
+testMonadic: PROC;
+   DCL (f,g, sin,cos,tan,atan,ln,sqrt) FLOAT(23);
+   DCL f15 FIXED(15);
+   FOR i FROM -1000 BY 1 TO 1000 REPEAT
+      f15 := i;
+      f := (TOFLOAT i)/10;
+      IF (i < 0 AND (SIGN f) NE -1) THEN
+         PUT 'testMonadic@1: SIGN mismatch: i=',f15,'  f=',f, '  sign=',SIGN f
+         TO so BY A,F(4),A,F(5,2),A,F(2),SKIP; 
+         ok := '0'B1;
+      FIN;
+      IF (i EQ 0 AND SIGN f NE 0 ) THEN
+         PUT 'testMonadic@1: SIGN mismatch: i=',f15,'  f=',f, '  sign=',SIGN f
+         TO so BY A,F(4),A,F(5,2),A,F(2),SKIP; 
+         ok := '0'B1;
+      FIN;
+      IF (i > 0 AND SIGN f NE 1) THEN
+         PUT 'testMonadic@1: SIGN mismatch: i=',f15,'  f=',f, '  sign=',SIGN f
+         TO so BY A,F(4),A,F(5,2),A,F(2),SKIP; 
+         ok := '0'B1;
+      FIN;
+
+      g:= -f;
+      IF (ABS(g+f) > 1.0E-4 ) THEN
+         PUT 'testMonadic@f+(-f): f+g', f+g
+         TO so BY A, E(13,6), SKIP;
+         ok := '0'B1;
+      FIN;
+
+     sin :=  SIN f;
+     cos := COS f;
+     IF (ABS(sin*sin+cos*cos-1.0) > 1.0E-4) THEN
+         PUT 'testMonadic@sin*sin+cos*cos-1 == 0:', sin*sin+cos*cos-1.0
+         TO so BY A, E(13,6), SKIP;
+         ok := '0'B1;
+     FIN;
+     IF (ABS(sin/cos- TAN f)  > 1.0E-4) THEN
+         PUT 'testMonadic@sin/sin-tan == 0:', sin/cos- TAN f
+         TO so BY A, E(13,6), SKIP;
+         ok := '0'B1;
+     FIN;
+   END;
+   FOR i FROM -3141 BY 1 TO 3141 REPEAT
+      f15 := i;
+      f := (TOFLOAT i)/1000;
+      atan = ATAN f;
+      g := TAN atan;
+      IF (ABS(f-g)  > 1.0E-4) THEN
+         PUT 'testMonadic@(ATAN TAN f)-f: f=',f, 'diff=', f-g
+         TO so BY A, E(13,6), A, E(13,6), SKIP;
+         ok := '0'B1;
+     FIN;
+   END;
+   FOR i FROM 1  BY 1 TO 31410 REPEAT
+      f15 := i;
+      f := (TOFLOAT i)/1000;
+      ln = LN f;
+      g := EXP ln;
+      IF (ABS(f-g)  > 1.0E-4) THEN
+         PUT 'testMonadic@(EXP LN f)-f:', f-g
+         TO so BY A, E(13,6), SKIP;
+         ok := '0'B1;
+     FIN;
+     sqrt = SQRT f;
+      IF (ABS(SQRT f *SQRT f - f)  > 1.0E-4) THEN
+         PUT 'testMonadic@SQRT f * SQRT f - f:',
+              SQRT f*SQRT f - f  
+         TO so BY A, E(13,6), SKIP;
+         ok := '0'B1;
+     FIN;
+     
+   END;
+END;
+
+powFloat: PROC;
+   DCL base FLOAT(23);
+   DCL expo FIXED(15);
+   DCL result FLOAT(23);
+ 
+   FOR i FROM 1 BY 10 TO 101 REPEAT
+      base = (TOFLOAT i)/10;
+      FOR j FROM -4 TO 4 REPEAT
+         expo = j;
+         IF base EQ 0 AND expo LE 0 THEN
+            PUT base,' **', expo ,' : skipped FixedDivideByZero ' 
+            TO so BY F(4), A, F(4),A, SKIP;
+         ELSE
+            result := base ** expo;
+
+            IF result > 0 AND expo NE 0 THEN
+               result := LN result;
+	       result = result/expo;
+               result = EXP result;
+               result = result - base;
+               IF ABS(result)  > 1.0E-4 THEN
+                PUT 'ABS(EXP (LN base**expo )/expo) - base)' ,
+                     result
+                TO so BY A, E(13,6),SKIP;
+                ok := '0'B1;
+            FIN;
+            FIN;
+         FIN;
+     END;
+   END;
+
+END;
+
+MODEND;

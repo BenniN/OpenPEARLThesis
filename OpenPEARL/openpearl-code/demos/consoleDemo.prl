@@ -1,0 +1,93 @@
+/*
+Demonstration application for usage of the Console device
+*/
+
+MODULE(ConsoleDemo);
+
+SYSTEM;
+   con: Console;
+PROBLEM;
+    SPC con DATION INOUT SYSTEM ALPHIC GLOBAL;
+    DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+
+    DCL goon BIT(1) INIT('1'B1);
+    DCL stop SEMA PRESET(0);
+
+! the task hello is started automatically due to the attribute 'MAIN'
+hello: TASK MAIN;
+   OPEN console;
+   PUT 'ConsoleDemo' TO console BY A, SKIP;
+   PUT 'enter :reader1:.. or :reader2:... and monitor the effect'
+      TO console BY A, SKIP;
+   PUT 'the writer completes the current output and stops at the first input character!'
+      TO console BY A, SKIP;
+   PUT 'terminate the application by enter END to one reader',
+       'check with /PRLI that the othe reader is still waiting for input',
+       'contine the other reader by any input - may be empty' 
+      TO console BY A, SKIP, A, SKIP, A,SKIP;
+
+   ACTIVATE reader1;
+   ACTIVATE reader2;
+   ACTIVATE writer;
+   AFTER 1SEC RESUME;
+   PUT '****** reader1 suspended - to accepting input' TO console BY A, SKIP;
+   SUSPEND reader1;
+   AFTER 5SEC RESUME;
+   CONTINUE reader1;
+   PUT '****** reader1 continue - accepting input' TO console BY A, SKIP;
+
+   AFTER 5 SEC RESUME;
+   PUT '****** reader1 becomes terminated ' TO console BY A, SKIP;
+   TERMINATE reader1;
+   AFTER 5 SEC RESUME;
+   PUT '****** reader1 restart' TO console BY A, SKIP;
+   ACTIVATE reader1;
+
+   REQUEST stop;
+   REQUEST stop;
+   REQUEST stop;
+   PUT 'Console demo terminates ...' TO console BY A, SKIP;
+   CLOSE console;
+END;
+
+reader1: TASK;
+   DCL text CHAR(10);
+   WHILE goon REPEAT
+      PUT 'reader1: enter max 10 characters' TO console BY A, SKIP;
+      GET text FROM console BY A, SKIP;
+      PUT 'reader1: got >', text, '<' TO console BY A,A,A, SKIP;
+      IF text EQ 'END' THEN
+         goon := '0'B1;
+      FIN;
+   END;
+   PUT 'reader1 terminates...' TO console BY A, SKIP;
+   RELEASE stop;
+END;
+
+reader2: TASK;
+   DCL text CHAR(10);
+   WHILE goon REPEAT
+      PUT 'reader2: enter max 10 characters' TO console BY A, SKIP;
+      GET text FROM console BY A, SKIP;
+      PUT 'reader2: got >', text, '<' TO console BY A,A,A, SKIP;
+      IF text EQ 'END' THEN
+         goon := '0'B1;
+      FIN;
+   END;
+   PUT 'reader2 terminates...' TO console BY A, SKIP;
+   RELEASE stop;
+END;
+
+writer: TASK;
+   DCL number FIXED INIT(1);
+   WHILE goon REPEAT
+      PUT 'writer: line #' , number TO console BY A, F(6), SKIP;
+      number := number + 1;
+      AFTER 1 SEC RESUME;
+   END;
+   PUT 'writer terminates...' TO console BY A, SKIP;
+   RELEASE stop;
+END;
+
+MODEND;
+

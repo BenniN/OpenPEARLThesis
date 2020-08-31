@@ -1,0 +1,140 @@
+/* objDCL : auto generated (Sun Aug 23 13:28:57 2020) */
+InternalSignal theInternalSignal;
+InternalTaskSignal theInternalTaskSignal;
+InternalSignalsSignal theInternalSignalsSignal;
+InternalDationSignal theInternalDationSignal;
+InternalDatatypeSignal theInternalDatatypeSignal;
+InternalConfigurationSignal theInternalConfigurationSignal;
+TerminateRequestSignal theTerminateRequestSignal;
+TaskSignal theTaskSignal;
+PrioOutOfRangeSignal thePrioOutOfRangeSignal;
+TaskRunningSignal theTaskRunningSignal;
+TaskSuspendedSignal theTaskSuspendedSignal;
+TaskTerminatedSignal theTaskTerminatedSignal;
+IllegalSchedulingSignal theIllegalSchedulingSignal;
+PriorityNotMapableSignal thePriorityNotMapableSignal;
+ArithmeticSignal theArithmeticSignal;
+FixedRangeSignal theFixedRangeSignal;
+FixedDivideByZeroSignal theFixedDivideByZeroSignal;
+ArithmeticOverflowSignal theArithmeticOverflowSignal;
+ArithmeticUnderflowSignal theArithmeticUnderflowSignal;
+ArithmeticDivideByZeroSignal theArithmeticDivideByZeroSignal;
+SemaOverflowSignal theSemaOverflowSignal;
+BoltStateSignal theBoltStateSignal;
+DurationDivideByZeroSignal theDurationDivideByZeroSignal;
+DurationRangeSignal theDurationRangeSignal;
+FloatIsNaNSignal theFloatIsNaNSignal;
+FloatIsINFSignal theFloatIsINFSignal;
+FunctionParameterOutOfRangeException theFunctionParameterOutOfRangeException;
+BitIndexOutOfRangeSignal theBitIndexOutOfRangeSignal;
+CharacterTooLongSignal theCharacterTooLongSignal;
+CharacterIndexOutOfRangeSignal theCharacterIndexOutOfRangeSignal;
+CharacterNotValidSignal theCharacterNotValidSignal;
+CharIsINVSignal theCharIsINVSignal;
+DationSignal theDationSignal;
+DationParamSignal theDationParamSignal;
+DationNotOpenSignal theDationNotOpenSignal;
+OpenFailedSignal theOpenFailedSignal;
+CloseFailedSignal theCloseFailedSignal;
+PositioningFailedSignal thePositioningFailedSignal;
+InvalidPositioningSignal theInvalidPositioningSignal;
+ReadingFailedSignal theReadingFailedSignal;
+WritingFailedSignal theWritingFailedSignal;
+DationIndexBoundSignal theDationIndexBoundSignal;
+DationNotSupportedSignal theDationNotSupportedSignal;
+DationEOFSignal theDationEOFSignal;
+NoEOFDationSignal theNoEOFDationSignal;
+DationTFURecordSignal theDationTFURecordSignal;
+DationDatatypeSignal theDationDatatypeSignal;
+DationFormatRepetitionValue theDationFormatRepetitionValue;
+DationFormatRepetitionOverflow theDationFormatRepetitionOverflow;
+ArrayIndexOutOfBoundsSignal theArrayIndexOutOfBoundsSignal;
+RefNotInitializedSignal theRefNotInitializedSignal;
+BadArraySliceSignal theBadArraySliceSignal;
+DeviceNotFoundSignal theDeviceNotFoundSignal;
+FormatSignal theFormatSignal;
+NoMoreCharactersSignal theNoMoreCharactersSignal;
+DurationFormatSignal theDurationFormatSignal;
+ClockFormatSignal theClockFormatSignal;
+FixedFormatSignal theFixedFormatSignal;
+CharacterFormatSignal theCharacterFormatSignal;
+BitFormatSignal theBitFormatSignal;
+ClockValueSignal theClockValueSignal;
+FixedValueSignal theFixedValueSignal;
+BitValueSignal theBitValueSignal;
+DurationValueSignal theDurationValueSignal;
+ExpFormatSignal theExpFormatSignal;
+ExpValueSignal theExpValueSignal;
+
+
+/* objArray : auto generated (Sun Aug 23 13:28:57 2020) */
+Signal *sv[] = {
+      (Signal*)&theInternalSignal
+      , (Signal*)&theInternalTaskSignal
+      , (Signal*)&theInternalSignalsSignal
+      , (Signal*)&theInternalDationSignal
+      , (Signal*)&theInternalDatatypeSignal
+      , (Signal*)&theInternalConfigurationSignal
+      , (Signal*)&theTerminateRequestSignal
+      , (Signal*)&theTaskSignal
+      , (Signal*)&thePrioOutOfRangeSignal
+      , (Signal*)&theTaskRunningSignal
+      , (Signal*)&theTaskSuspendedSignal
+      , (Signal*)&theTaskTerminatedSignal
+      , (Signal*)&theIllegalSchedulingSignal
+      , (Signal*)&thePriorityNotMapableSignal
+      , (Signal*)&theArithmeticSignal
+      , (Signal*)&theFixedRangeSignal
+      , (Signal*)&theFixedDivideByZeroSignal
+      , (Signal*)&theArithmeticOverflowSignal
+      , (Signal*)&theArithmeticUnderflowSignal
+      , (Signal*)&theArithmeticDivideByZeroSignal
+      , (Signal*)&theSemaOverflowSignal
+      , (Signal*)&theBoltStateSignal
+      , (Signal*)&theDurationDivideByZeroSignal
+      , (Signal*)&theDurationRangeSignal
+      , (Signal*)&theFloatIsNaNSignal
+      , (Signal*)&theFloatIsINFSignal
+      , (Signal*)&theFunctionParameterOutOfRangeException
+      , (Signal*)&theBitIndexOutOfRangeSignal
+      , (Signal*)&theCharacterTooLongSignal
+      , (Signal*)&theCharacterIndexOutOfRangeSignal
+      , (Signal*)&theCharacterNotValidSignal
+      , (Signal*)&theCharIsINVSignal
+      , (Signal*)&theDationSignal
+      , (Signal*)&theDationParamSignal
+      , (Signal*)&theDationNotOpenSignal
+      , (Signal*)&theOpenFailedSignal
+      , (Signal*)&theCloseFailedSignal
+      , (Signal*)&thePositioningFailedSignal
+      , (Signal*)&theInvalidPositioningSignal
+      , (Signal*)&theReadingFailedSignal
+      , (Signal*)&theWritingFailedSignal
+      , (Signal*)&theDationIndexBoundSignal
+      , (Signal*)&theDationNotSupportedSignal
+      , (Signal*)&theDationEOFSignal
+      , (Signal*)&theNoEOFDationSignal
+      , (Signal*)&theDationTFURecordSignal
+      , (Signal*)&theDationDatatypeSignal
+      , (Signal*)&theDationFormatRepetitionValue
+      , (Signal*)&theDationFormatRepetitionOverflow
+      , (Signal*)&theArrayIndexOutOfBoundsSignal
+      , (Signal*)&theRefNotInitializedSignal
+      , (Signal*)&theBadArraySliceSignal
+      , (Signal*)&theDeviceNotFoundSignal
+      , (Signal*)&theFormatSignal
+      , (Signal*)&theNoMoreCharactersSignal
+      , (Signal*)&theDurationFormatSignal
+      , (Signal*)&theClockFormatSignal
+      , (Signal*)&theFixedFormatSignal
+      , (Signal*)&theCharacterFormatSignal
+      , (Signal*)&theBitFormatSignal
+      , (Signal*)&theClockValueSignal
+      , (Signal*)&theFixedValueSignal
+      , (Signal*)&theBitValueSignal
+      , (Signal*)&theDurationValueSignal
+      , (Signal*)&theExpFormatSignal
+      , (Signal*)&theExpValueSignal
+   };
+size_t Signal::nbrOfSignals = 66;
+Signal** Signal::signalVector = sv;

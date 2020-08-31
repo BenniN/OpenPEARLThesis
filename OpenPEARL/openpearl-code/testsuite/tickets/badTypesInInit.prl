@@ -1,0 +1,17 @@
+MODULE(inits);
+
+PROBLEM;
+
+DCL clk CLOCK INIT (1 HRS);
+!DCL clk1 CLOCK INIT (1);  ! internal compiler error
+DCL clk2 CLOCK INIT('abc');
+DCL clk3 CLOCK INIT('1'B1);
+DCL dur DURATION INIT('abc');
+DCL dur1 DURATION INIT(1:2:3);
+DCL dur2 DURATION INIT('1'B1);
+DCL b1 BIT(16) INIT('abcd');
+DCL b2 BIT(16) INIT(1);
+DCL b3 BIT(16) INIT(1 HRS);
+
+! DCL f FIXED INIT('abcd');  ! type mismatch
+MODEND;

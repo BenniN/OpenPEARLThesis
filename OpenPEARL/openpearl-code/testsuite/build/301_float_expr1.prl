@@ -1,0 +1,94 @@
+MODULE(float_expr);
+
+! test for float expressions without tests for operator 
+! priority and execution sequence
+! no type mixing in this test
+
+PROBLEM;
+DCL x23 FLOAT(23) INIT(4.0);
+DCL y23 FLOAT(23) INIT(2);
+DCL z23 FLOAT(23);
+DCL bit BIT(1);
+DCL x52 FLOAT(52);
+DCL f31 FIXED(31) INIT(2);
+DCL f15 FIXED(15) INIT(7);
+
+T1: TASK MAIN;
+__cpp__ ("bool ok = 1;");
+  ! basic operations
+   z23 := x23 + y23;
+__cpp__("ok &= _z23.x == 6;");
+   z23 := x23 - y23;
+__cpp__("ok &= _z23.x == 2;");
+   z23 := x23 * y23;
+__cpp__("ok &= _z23.x == 8;");
+   z23 := x23 / y23;
+__cpp__("ok &= _z23.x == 4;");
+   z23 := x23 ** f31; 
+__cpp__("ok &= _z23.x == 16;");
+
+   ! simple expressions with ()
+   z23 := (x23+y23)*(x23-y23);
+__cpp__("ok &= _z23.x == 36;");
+
+   ! comparison with c-style operators
+   bit := x23 < y23;
+   bit := (x23+y23) <= z23; 
+   bit := x23 == y23;	 
+   bit := x23 == y23 + z23; 
+   bit := (x23+y23) /= z23;	
+   bit := (x23+y23) >= z23; 
+   bit := (x23+y23) > z23; 
+
+   ! comparison with fortran-style operators
+   bit := x23 LT y23;	
+   bit := (x23+y23) LE z23; 
+   bit := x23 EQ y23 + z23;	 
+   bit := (x23+y23) NE z23;	 
+   bit := (x23+y23) GE z23;	 
+   bit := (x23+y23) GT z23;	
+
+   ! intrinsic math functions
+   z23 := SIN(x23);		 
+   z23 := COS(x23);		 
+   z23 := TAN(x23);		 
+   z23 := ATAN(x23);		
+   z23 := TANH(x23);	
+   z23 := EXP(x23); 
+   z23 := LN(x23); 
+   z23 := SQRT(x23); 
+   x23 := -4.5;
+   z23 := ABS(x23);
+__cpp__("ok &= _z23.x == 4.5;");
+
+   ! fit
+   x52 := x23 FIT x52;
+   x23 := x52 FIT x23;
+
+
+   ! entier and round
+   x23 := -4.4;
+   f31 := ENTIER x23;
+__cpp__("ok &= _f31.x == -5;");
+   f31 := ROUND x23;
+__cpp__("ok &= _f31.x == -4;");
+   ! sizeof
+
+
+   f31 := SIZEOF x23;
+   f31 := SIZEOF(x23);
+
+   ! mixed type operations
+   f15 = 3;
+   x23 = x23 * 3;
+   x23 = x23 * f15;
+   x23 = f15 * x23;
+   !x23 = x23 * f31;
+
+
+__cpp__("ok &= _f31.x == 4;");
+
+__cpp__("pearlrt::Control::setExitCode(ok);");
+END;
+
+MODEND;

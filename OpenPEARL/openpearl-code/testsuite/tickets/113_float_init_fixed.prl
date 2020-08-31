@@ -1,0 +1,8 @@
+MODULE(floatInitFixed);
+
+PROBLEM;
+
+DCL f FLOAT INIT(0(31));
+
+MODEND;
+

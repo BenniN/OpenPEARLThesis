@@ -1,0 +1,43 @@
+MODULE(ads1015);
+SYSTEM;
+  i2cbus : I2CBus('/dev/i2c-1');
+  bme    : BME280('76'B4,2,4,2,4,1) --- i2cbus;
+  termout: StdOut;
+
+PROBLEM;
+  SPC termout DATION OUT SYSTEM ALPHIC GLOBAL;
+  SPC bme    DATION IN  SYSTEM BASIC ALL GLOBAL;
+   
+
+DCL console DATION OUT ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(termout);
+DCL bme280 DATION IN BASIC ALL CREATED(bme);
+
+dumpInputs: TASK MAIN;
+   DCL v0(3) FIXED(31);
+   DCL (temp ,pressure, hum) FIXED(31);
+   DCL (flTemp ,flPressure, flHum) FLOAT(52);
+
+   OPEN console;
+   OPEN bme280;;
+
+   PUT 'BME280 Test started' TO console BY A, SKIP;
+   REPEAT
+      TAKE v0 FROM bme280;
+!  __cpp__("_bme280.dationRead(&data_v0, sizeof(data_v0));");
+   !   TAKE v1 FROM ch1;
+     temp = v0(1);
+     pressure = v0(2);
+     hum = v0(3);
+     flTemp = (TOFLOAT temp) / 100.0 ;
+     flPressure = (TOFLOAT pressure) / 10000.0;
+     flHum = (TOFLOAT hum)/ 1000;
+
+      PUT 'raw-values:', temp, pressure, hum TO console BY A,F(6),X(2),F(8),X(2), F(8), SKIP;
+     PUT 'with units:',flTemp,'deg C ', flPressure,' mbar ',flHum,'% hum' TO console BY
+          A, F(5,1),A,       F(7,2), A,          F(5,1) , A, SKIP(2);
+      AFTER 0.5 SEC RESUME;
+   END;
+END; 
+
+
+MODEND;

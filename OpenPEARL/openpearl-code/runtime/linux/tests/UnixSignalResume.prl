@@ -1,0 +1,55 @@
+MODULE (UnixSignal);
+SYSTEM;
+   ctrlc: UnixSignal(2);     ! ^C
+   quit: UnixSignal(3);      ! ^\
+   so: StdOut;
+
+PROBLEM;
+
+   SPC ctrlc INTERRUPT;
+   SPC quit INTERRUPT;
+
+   SPC so DATION OUT SYSTEM ALPHIC;
+   DCL shutdown BIT(1) INIT('0'B1);
+
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t1: TASK MAIN;
+
+   OPEN stdout;
+!   PUT 'start 2 tasks which echo the reception of ^C or  ^\' TO stdout 
+   PUT 'start 2 tasks which echo the reception of ^C or  ^'\5C\'' TO stdout 
+   BY A, SKIP;
+   PUT 'after 30 seconds the application terminates self' TO stdout BY A, SKIP;
+
+   ENABLE quit;
+   ENABLE ctrlc;
+
+   ACTIVATE tQuit;
+   ACTIVATE tCtrlc;
+
+   AFTER 30 SEC RESUME;
+   shutdown = '1'B1;
+   TRIGGER quit;
+   TRIGGER ctrlc;
+
+END;
+
+tQuit: TASK;
+   WHILE NOT shutdown REPEAT
+     WHEN quit RESUME;
+     PUT 'quit received' TO stdout BY A, SKIP;
+   END;
+   PUT 'tQuit terminates' TO stdout BY A, SKIP;
+END;
+
+tCtrlc: TASK;
+   WHILE NOT shutdown REPEAT
+     WHEN ctrlc RESUME;
+     PUT 'ctrlc received' TO stdout BY A, SKIP;
+   END;
+   PUT 'tCtrlc terminates' TO stdout BY A, SKIP;
+END;
+
+MODEND;
+

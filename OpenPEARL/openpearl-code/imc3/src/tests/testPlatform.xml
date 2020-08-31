@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<platform file="testPlatform.xml">
+      <signal name="FixedRangeSignal"/>
+      <signal name="FixedDivideByZeroSignal"/>
+      <signal name="FloatIsNaNSignal"/>
+
+      <interrupt name="UnixSignal">
+         <parameters>
+            <FIXED name="signalNumber" length="31">
+               <VALUES>1,2,3,15,16,17</VALUES>
+            </FIXED>
+         </parameters>
+      </interrupt>
+
+      <dation name="Disc">
+         <parameters>
+            <CHAR name="dir" length="32767"/>	<!-- beliebiger String -->
+            <FIXED name="nbrOfFiles" length="31">
+               <FIXEDRANGE>1,9999</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+         <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+         <data>ALL</data>
+         <associationProvider>
+            <associationType name="NamedAlphicOutProvider" />
+         </associationProvider>
+      </dation>
+
+      <dation name="StdIn">
+         <parameters>
+         </parameters>
+         <attributes>
+            FORWARD, IN	, SYSTEM
+         </attributes>
+         <DATA>ALPHIC</DATA>
+         <checks>
+           <check instances="1"/>
+         </checks>
+      </dation>
+
+      <dation name="StdOut">
+         <parameters>
+         </parameters>
+	 <attributes>
+            FORWARD, OUT, SYSTEM
+         </attributes>
+         <data>ALPHIC</data>
+         <associationProvider>
+            <associationType name="AlphicOutProvider" />
+         </associationProvider>
+         <checks>
+           <check instances ="1"/>
+         </checks>
+      </dation>
+
+      <connection name="I2CBus">
+         <parameters>
+            <CHAR name="deviceName" length="32767">
+               <NotEmpty />
+            </CHAR>
+         </parameters>
+         <associationProvider>
+            <associationType name="I2CBusProvider" />
+         </associationProvider>
+         <checks>
+           <check instances ="oncePerSet" set="I2CBus($deviceName)"/>
+         </checks>
+      </connection>
+
+      <dation name="LM75">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4,'48'B4, '49'B4, '4A'B4, '4B'B4,
+                       '4C'B4, '4D'B4 , '4E'B4, '4F'B4</VALUES>
+            </BIT>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, IN
+         </attributes>
+         <data>FIXED(15)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check i2cAdrDoesNotCollide="LM75"
+                   nonShareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+      <dation name="PCF8574In">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4, '21'B4, '22'B4, '23'B4,
+                       '24'B4, '25'B4 , '26'B4, '27'B4,
+                       '38'B4, '39'B4 , '3A'B4, '3B'B4,
+                       '3C'B4, '3D'B4 , '3E'B4, '3F'B4
+               </VALUES>
+            </BIT>
+            <FIXED length="7" name="start">
+               <FIXEDRANGE>0,7</FIXEDRANGE>
+            </FIXED>
+            <FIXED length="7" name="width">
+               <FIXEDRANGE>1,[$start+1]</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, IN
+         </attributes>
+         <data>BIT($width)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check pinDoesNotCollide="PCF8574xx(I2cAdr=$iicAdr)" 
+		start="$start" width= "$width" />
+           <check i2cAdrDoesNotCollide="PCF8574"
+                   shareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+      <dation name="PCF8574Out">
+         <parameters>
+            <BIT name="iicAdr" length="8">
+               <VALUES>'20'B4, '21'B4, '22'B4, '23'B4,
+                       '24'B4, '25'B4 , '26'B4, '27'B4,
+                       '38'B4, '39'B4 , '3A'B4, '3B'B4,
+                       '3C'B4, '3D'B4 , '3E'B4, '3F'B4
+               </VALUES>
+            </BIT>
+            <FIXED length="7" name="start">
+               <FIXEDRANGE>0,7</FIXEDRANGE>
+            </FIXED>
+            <FIXED length="7" name="width">
+               <FIXEDRANGE>1,[$start+1]</FIXEDRANGE>
+            </FIXED>
+         </parameters>
+	 <attributes>
+            BASIC, SYSTEM, OUT
+         </attributes>
+         <data>BIT($width)</data>
+         <needAssociation name="I2CBusProvider"/>
+         <checks>
+           <check pinDoesNotCollide="PCF8574xx(I2cAdr=$iicAdr)" 
+		start="$start" width= "$width"/>
+           <check i2cAdrDoesNotCollide="PCF8574"
+                   shareable="$iicAdr"/>
+         </checks>
+      </dation>
+
+  <configuration name="Log">
+    <parameters>
+      <CHAR name="loglevel" length="4">
+         <NotEmpty/>
+      </CHAR>
+    </parameters>
+    <needAssociation name="AlphicOutProvider"/>
+    <checks>
+       <check instances ="1"/>
+    </checks>
+  </configuration>
+
+   <connection name="LogFile">
+      <parameters>
+         <CHAR name="fileName" length="32767">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <needAssociation name="NamedAlphicOutProvider"/>
+   </connection>
+
+   <dation name="RPiDigitalIn">
+      <parameters>
+         <FIXED name="start" length="31">
+             <FIXEDRANGE>0,27</FIXEDRANGE>
+         </FIXED>
+         <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
+         <CHAR name="pullUpDown" length="1"><VALUES>'u','d','n'</VALUES></CHAR>
+      </parameters>
+      <attributes> IN, SYSTEM, BASIC</attributes>
+         <checks>
+           <check pinDoesNotCollide="RPiGPIO" 
+		start="$start" width= "$width"/>
+           </checks>
+      <data>BIT($width)</data>
+   </dation>
+
+   <dation name="RPiDigitalOut">
+      <parameters>
+         <FIXED name="start" length="31">
+             <FIXEDRANGE>0,27</FIXEDRANGE>
+         </FIXED>
+         <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
+      </parameters>
+         <checks>
+           <check pinDoesNotCollide="RPiGPIO" 
+		start="$start" width= "$width"/>
+           </checks>
+      <attributes> OUT, SYSTEM, BASIC</attributes>
+      <data>BIT($width)</data>
+   </dation>
+
+   <configuration name="reservedGpios" autoInstanciate="1">
+     <checks>
+      <check pinDoesNotCollide="RPiGPIO" bitList="0,1,2,4,5,6,7"/>
+     </checks>
+   </configuration>
+
+</platform>
+

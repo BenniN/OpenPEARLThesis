@@ -1,0 +1,50 @@
+MODULE (UnixSignal);
+SYSTEM;
+   ctrlc: UnixSignal(2);     ! ^C
+   quit: UnixSignal(3);      ! ^\
+   so: StdOut;
+
+PROBLEM;
+
+   SPC ctrlc INTERRUPT;
+   SPC quit INTERRUPT;
+
+   SPC so DATION OUT SYSTEM ALPHIC;
+
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t1: TASK MAIN;
+
+   OPEN stdout;
+
+   PUT 
+!    'wait for ^C and ^\ and start a dedicated task which echos the reception'
+    'wait for ^C and ^'\5C\' and start a dedicated task which echos the reception '
+     TO stdout BY A, SKIP;
+
+   PUT 'after 30 SEC the application terminates autonmatically' 
+       TO stdout BY A, SKIP;
+  
+
+   ENABLE quit;
+   ENABLE ctrlc;
+
+   WHEN quit ACTIVATE tQuit;
+   WHEN ctrlc ACTIVATE tCtrlc;
+
+   AFTER 30 SEC RESUME;
+   PREVENT tQuit;
+   PREVENT tCtrlc;
+
+END;
+
+tQuit: TASK;
+   PUT 'quit received' TO stdout BY A, SKIP;
+END;
+
+tCtrlc: TASK;
+   PUT 'ctrlc received' TO stdout BY A, SKIP;
+END;
+
+MODEND;
+

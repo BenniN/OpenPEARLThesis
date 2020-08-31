@@ -1,0 +1,253 @@
+#!/bin/bash
+if [ `id -u` -ne 0 ]
+then
+   echo "must be root for essential package installation"
+   exit 1
+fi
+
+Developer=0
+if [ "$1" == "dev" ]
+then
+   Developer=1
+fi
+
+SystemKnown=0
+AptPackageList=""
+PackageManager="apt-get"
+
+grep "PRETTY_NAME=\"Fedora 31 (Workstation Edition)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Fedora 31 (Workstation Edition) "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" java-1.8.0-openjdk.x86_64"
+
+   AptPackageList+=" flex flex-devel"
+   AptPackageList+=" ncurses-libs.x86_64 ncurses-devel"
+
+   AptPackageList+=" flex ncurses-libs.x86_64 ncurses-devel"
+
+   AptPackageList+=" expat expat-devel.x86_64"
+   AptPackageList+=" cpan"
+   PackageManager="dnf"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-collection-langenglish"
+      AptPackageList+=" 3"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Ubuntu 18.04.1 LTS\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 18.04.1 LTS "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Ubuntu 17.10\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 17.10 "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Ubuntu 19.10\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 19.10 "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
+   AptPackageList+=" zlib1g-dev"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive-full"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"openSUSE Leap 15.1\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: openSUSE Leap 15.1 "
+   AptPackageList+=" gcc gcc-c++ make"
+   AptPackageList+=" java-1_8_0-openjdk-devel"
+   AptPackageList+=" flex libncurses5"
+   AptPackageList+=" expat libexpat1"
+   AptPackageList+=" libncurses5 ncurses5-devel "
+   AptPackageList+=" zlib-devel "
+   AptPackageList+=" i2c-tools libi2c0-devel"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive-full"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Linux Mint 18.3\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Linux Mint 18.3"
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Linux Mint 19.1\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Linux Mint 19.1"
+#   AptPackageList+=" gcc  make"
+   AptPackageList+=" g++"
+   AptPackageList+=" default-jdk"
+   AptPackageList+=" flex libfl-dev libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Debian GNU/Linux 8 \(jessie\)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Debian 8 jessie "
+   AptPackageList+=" openjdk-7-jdk"
+   AptPackageList+=" gcc g++ git make gawk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Debian GNU/Linux 9 \(stretch\)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Debian 9 stretch "
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" gcc g++ git make gawk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Raspbian GNU/Linux 8 \(jessie\)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Raspbian 8 jessie "
+   AptPackageList+=" openjdk-7-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"Raspbian GNU/Linux 9 \(stretch\)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Raspbian 9 stretch "
+   #AptPackageList+=" openjdk-8-jdk" # raspbian comes with a javac
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+if [ "$SystemKnown" -ne "1" ] 
+then
+   echo "host linux version not detected"
+   cat /etc/os-release
+   exit 1
+fi
+
+echo "required apt-packages"
+echo $AptPackageList
+
+if [ "$SystemKnown" -eq "1" ] 
+then
+   # common for all platforms
+   wget http://www.antlr.org/download/antlr-4.5-complete.jar
+   mv antlr-4.5-complete.jar /usr/local/lib/
+   $PackageManager -y install $AptPackageList
+
+   # set automatic 'y' for cpan/cpanm installation
+   export PERL_MM_USE_DEFAULT=1
+   cpan -T App::cpanminus		# do not test
+   cpanm --notest Spreadsheet::Read
+   cpanm --notest Spreadsheet::ReadSXC
+fi
+
+echo
+echo "please log on as normal user and perform"
+echo "    make defconfig"

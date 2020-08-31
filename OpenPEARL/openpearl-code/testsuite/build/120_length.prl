@@ -1,0 +1,83 @@
+MODULE(length);
+
+SYSTEM;
+   so: StdOut;
+
+
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC ;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED (so);
+
+t1: TASK MAIN;
+    DCL defaultFixed FIXED;
+    LENGTH FIXED (7);
+    DCL fixed7 FIXED;
+   
+    LENGTH FIXED (15);
+    DCL fixed15 FIXED;
+    LENGTH FIXED (31);
+    DCL fixed31 FIXED;
+    LENGTH FIXED (63);
+    DCL fixed63 FIXED;
+
+    DCL char CHAR;
+    LENGTH CHAR(10);
+    DCL char10 CHAR;
+    LENGTH CHAR(20);
+    DCL char20 CHAR;
+
+    DCL bit BIT;
+    LENGTH BIT(9);
+    DCL bit9 BIT;
+    LENGTH BIT(15);
+    DCL bit15 BIT;
+    LENGTH BIT(64);
+    DCL bit64 BIT;
+
+    DCL float FLOAT;
+    LENGTH FLOAT(23);
+    DCL float23 FLOAT;
+    LENGTH FLOAT(52);
+    DCL float52 FLOAT;
+
+    OPEN stdout;
+
+    PUT 'LENGTH test' TO stdout BY A, SKIP;
+    PUT 'SIZEOF defaultFixed', SIZEOF(defaultFixed) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF fixed7', SIZEOF(fixed7) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF fixed15', SIZEOF(fixed15) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF fixed31', SIZEOF(fixed31) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF fixed63', SIZEOF(fixed63) TO stdout
+     BY A, F(3), SKIP;
+
+    PUT 'SIZEOF char', SIZEOF(char) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF char10', SIZEOF(char10) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF char20', SIZEOF(char20) TO stdout
+     BY A, F(3), SKIP;
+
+    PUT 'SIZEOF bit', SIZEOF(bit) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF bit9', SIZEOF(bit9) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF bit15', SIZEOF(bit15) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF bit64', SIZEOF(bit64) TO stdout
+     BY A, F(3), SKIP;
+
+    PUT 'SIZEOF float', SIZEOF(float) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF float23', SIZEOF(float23) TO stdout
+     BY A, F(3), SKIP;
+    PUT 'SIZEOF float52', SIZEOF(float52) TO stdout
+     BY A, F(3), SKIP;
+   CLOSE stdout;
+END;
+
+    
+MODEND;
