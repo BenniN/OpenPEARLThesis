@@ -21,6 +21,7 @@ END;
 
 transponse: PROC(x(,) FIXED IDENT);
     DCL help FIXED;
+
     IF 1 LWB x NE 2 LWB x OR 1 UPB x NE 2 UPB x THEN
         PUT 'martix must be symmetric' TO termout BY A, SKIP;
         RETURN;

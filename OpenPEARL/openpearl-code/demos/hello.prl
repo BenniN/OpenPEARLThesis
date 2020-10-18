@@ -11,11 +11,21 @@ PROBLEM;
     SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
     DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
 
-! the task hello is started automatically due to the attribute 'MAIN'
-hello: TASK MAIN;
-   OPEN termout;
-   PUT 'Hello World' TO termout BY A, SKIP;
-   CLOSE termout;
+!this task is for testing and finding returns
+
+   my $a = 1;
+   my $b = 2;
+
+   if($a == $b){
+      print("a and b are equal\n");
+      return a;
+   }elsif($a > $b){
+      print("a is greater than b\n");
+      return a;
+   }else{
+      print("a is less than b\n");
+   }
+   return a;
 END;
 
 MODEND;
